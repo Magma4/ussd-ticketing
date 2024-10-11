@@ -1,4 +1,6 @@
+import uuid
 from django.db import models
+from django.contrib.auth.models import User
 
 class Ticket(models.Model):
     TICKET_STATUS = [
@@ -18,6 +20,8 @@ class Ticket(models.Model):
         ('Email', 'Email'),
     ]
 
+    # New UUID field for ticket number
+    ticket_number = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     id_number = models.CharField(max_length=20, unique=True)
     description = models.TextField()
     status = models.CharField(max_length=20, choices=TICKET_STATUS, default='Assigned')
@@ -29,11 +33,13 @@ class Ticket(models.Model):
     mode = models.CharField(max_length=20, choices=MODE_CHOICES, default='Walk-In')
 
     def __str__(self):
-        return f"{self.id_number} - {self.category} ({self.status})"
+        return f"Ticket {self.ticket_number} - {self.id_number} - {self.category} ({self.status})"
+
 
 class Agent(models.Model):
-    username = models.CharField(max_length=50, unique=True)
+    user = models.ForeignKey(User, models.CASCADE, null=True)
     full_name = models.CharField(max_length=100)
+    image = models.ImageField(default='avatar.jpg', upload_to='Profile_Images')
 
     def __str__(self):
         return self.username
