@@ -71,7 +71,7 @@
 
 
 
-				<div class="sidebar-cta">
+				<!-- <div class="sidebar-cta">
 					<div class="sidebar-cta-content">
 						<strong class="d-inline-block mb-2">Download Report</strong>
 						<div class="mb-3 text-sm">
@@ -81,7 +81,7 @@
 							<a href="#" class="btn btn-primary">Download Report</a>
 						</div>
 					</div>
-				</div>
+				</div> -->
 			</div>
 		</nav>
 
@@ -206,18 +206,38 @@
             <div class="modal-body">
                 <!-- Tabs Navigation -->
                 <ul class="nav nav-tabs" id="ticketTabs" role="tablist">
+                    <!-- History Tab First -->
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link active" id="create-ticket-tab" data-bs-toggle="tab" href="#create-ticket" role="tab" aria-controls="create-ticket" aria-selected="true">Create Ticket</a>
+                        <a class="nav-link active" id="ticket-history-tab" data-bs-toggle="tab" href="#ticket-history" role="tab" aria-controls="ticket-history" aria-selected="true">History</a>
                     </li>
+                    <!-- Create Ticket Tab Second -->
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="ticket-history-tab" data-bs-toggle="tab" href="#ticket-history" role="tab" aria-controls="ticket-history" aria-selected="false">History</a>
+                        <a class="nav-link" id="create-ticket-tab" data-bs-toggle="tab" href="#create-ticket" role="tab" aria-controls="create-ticket" aria-selected="false">Create Ticket</a>
                     </li>
                 </ul>
 
                 <!-- Tabs Content -->
                 <div class="tab-content" id="ticketTabsContent">
+                    <!-- History Tab -->
+                    <div class="tab-pane fade show active" id="ticket-history" role="tabpanel" aria-labelledby="ticket-history-tab">
+                        <!-- Search Bar for ID Number -->
+                        <form id="searchHistoryForm">
+                            <div class="mb-3">
+                                <label for="searchIdNumber" class="form-label">Search by ID Number</label>
+                                <input type="text" class="form-control" id="searchIdNumber" placeholder="Enter ID number">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Search</button>
+                        </form>
+
+                        <!-- Display Ticket History -->
+                        <div id="ticketHistoryContent" class="mt-3">
+                            <!-- History content will be dynamically populated based on search -->
+                            <p>No tickets found. Search for ticket history using ID Number.</p>
+                        </div>
+                    </div>
+
                     <!-- Create Ticket Tab -->
-                    <div class="tab-pane fade show active" id="create-ticket" role="tabpanel" aria-labelledby="create-ticket-tab">
+                    <div class="tab-pane fade" id="create-ticket" role="tabpanel" aria-labelledby="create-ticket-tab">
                         <form id="ticketForm">
                             <!-- Mode Dropdown -->
                             <div class="mb-3">
@@ -252,25 +272,18 @@
                                     <option value="vclass">VClass</option>
                                     <option value="transcript">Transcript</option>
                                     <option value="admission">Admission</option>
-                                    <option value="graduation">Wi-Fi</option>
+                                    <option value="wifi">Wi-Fi</option>
+									<option value="other">Other</option>
                                 </select>
                             </div>
 
-                           <!-- Description Input -->
+                            <!-- Description Input -->
                             <div class="mb-3">
                                 <label for="description" class="form-label">Description</label>
                                 <input type="text" class="form-control" id="description" placeholder="Type exact issue here...">
                             </div>
 
                         </form>
-                    </div>
-
-                    <!-- History Tab -->
-                    <div class="tab-pane fade" id="ticket-history" role="tabpanel" aria-labelledby="ticket-history-tab">
-                        <div id="ticketHistoryContent">
-                            <!-- History content will be dynamically populated -->
-                            <p>No tickets submitted yet.</p>
-                        </div>
                     </div>
                 </div>
             </div>
