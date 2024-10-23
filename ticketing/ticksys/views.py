@@ -3,6 +3,7 @@ from .models import *
 from .forms import Register, UserCreationForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
+from django.utils import timezone
 
 
 # Create your views here.
@@ -33,7 +34,23 @@ def signup(request):
     return render(request, 'signup.html', context)
 
 def index(request):
-    return render(request, 'index.html')
+    user = request.user
+    tickets = Ticket.objects.all()
+    tickets_by_user = Ticket.objects.filter(user=user).count()
+
+    today = timezone.now().date()
+    user_tickets_today = Ticket.objects.filter(user=user, created_at__date=today).count()
+    assigned_to = Ticket.objects.filter( agent=user, status='Assigned' or 'In Progress').count()
+    total_resolved = Ticket.objects.filter(user=user, status='Done').count()
+    context = {
+        'user' : user,
+        'tickets' : tickets,
+        'tickets_by_user' : tickets_by_user,
+        'user_tickets_today' : user_tickets_today,
+        'assigned_to' : assigned_to,
+        'total_resolved' : total_resolved,
+    }
+    return render(request, 'index.html', context)
 
 def ticketlogs(request):
     return render(request, 'ticketlogs.html')

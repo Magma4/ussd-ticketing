@@ -166,7 +166,7 @@
               </a>
 
 							<a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
-                <img src="{% static 'img/avatars/cash.png' %}" class="avatar img-fluid rounded me-1" alt="" /> <span class="text-dark">Ernest Agyemang</span>
+                <img src="{% static 'img/avatars/cash.png' %}" class="avatar img-fluid rounded me-1" alt="" /> <span class="text-dark">{{user.first_name|title}} {{user.last_name|title}}</span>
               </a>
 							<div class="dropdown-menu dropdown-menu-end">
 								<a class="dropdown-item" href="pages-profile.html"><i class="align-middle me-1" data-feather="user"></i> Profile</a>
@@ -186,7 +186,7 @@
 			<main class="content">
 				<div class="container-fluid p-0">
 					<div class="d-flex justify-content-between align-items-center mb-3">
-						<h1 class="h3 mb-0">Welcome <strong>{Username}</strong></h1>
+						<h1 class="h3 mb-0">Welcome <strong>{{user.username|title}}</strong></h1>
 						<!-- Create Ticket Button that triggers the modal -->
 						<button type="button" class="btn btn-lg btn-primary" style="padding: 15px 40px;" data-bs-toggle="modal" data-bs-target="#createTicketModal">
 							+ Create Ticket
@@ -315,7 +315,7 @@
 											</div>
 										</div>
 									</div>
-									<h1 class="mt-1 mb-3">142</h1>
+									<h1 class="mt-1 mb-3">{{tickets_by_user}}</h1>
 								</div>
 							</div>
 						</div>
@@ -334,7 +334,7 @@
 											</div>
 										</div>
 									</div>
-									<h1 class="mt-1 mb-3">12</h1>
+									<h1 class="mt-1 mb-3">{{user_tickets_today}}</h1>
 								</div>
 							</div>
 						</div>
@@ -353,7 +353,7 @@
 											</div>
 										</div>
 									</div>
-									<h1 class="mt-1 mb-3">5</h1>
+									<h1 class="mt-1 mb-3">{{assigned_to}}</h1>
 								</div>
 							</div>
 						</div>
@@ -372,7 +372,7 @@
 											</div>
 										</div>
 									</div>
-									<h1 class="mt-1 mb-3">64</h1>
+									<h1 class="mt-1 mb-3">{{total_resolved}}</h1>
 								</div>
 							</div>
 						</div>
@@ -397,62 +397,15 @@
 										</tr>
 									</thead>
 									<tbody> 
+										{% for ticket in tickets %}
 										<tr>
-											<td>Project Apollo</td>
-											<td class="d-none d-xl-table-cell">01/01/2023</td>
-											<td class="d-none d-xl-table-cell">31/06/2023</td>
-											<td><span class="badge bg-success">Done</span></td>
-											<td class="d-none d-md-table-cell">Vanessa Tucker</td>
+											<td>{{ticket.created_at}}</td>
+											<td class="d-none d-xl-table-cell">{{ticket.id_number}}</td>
+											<td class="d-none d-xl-table-cell">{{ticket.category}}</td>
+											<td><span class="badge bg-success">{{ticket.status}}</span></td>
+											<td class="d-none d-md-table-cell">{{ticket.user.first_name|title}} {{ticket.user.last_name|title}}</td>
 										</tr>
-										<tr>
-											<td>Project Fireball</td>
-											<td class="d-none d-xl-table-cell">01/01/2023</td>
-											<td class="d-none d-xl-table-cell">31/06/2023</td>
-											<td><span class="badge bg-danger">Cancelled</span></td>
-											<td class="d-none d-md-table-cell">William Harris</td>
-										</tr>
-										<tr>
-											<td>Project Hades</td>
-											<td class="d-none d-xl-table-cell">01/01/2023</td>
-											<td class="d-none d-xl-table-cell">31/06/2023</td>
-											<td><span class="badge bg-success">Done</span></td>
-											<td class="d-none d-md-table-cell">Sharon Lessman</td>
-										</tr>
-										<tr>
-											<td>Project Nitro</td>
-											<td class="d-none d-xl-table-cell">01/01/2023</td>
-											<td class="d-none d-xl-table-cell">31/06/2023</td>
-											<td><span class="badge bg-warning">In progress</span></td>
-											<td class="d-none d-md-table-cell">Vanessa Tucker</td>
-										</tr>
-										<tr>
-											<td>Project Phoenix</td>
-											<td class="d-none d-xl-table-cell">01/01/2023</td>
-											<td class="d-none d-xl-table-cell">31/06/2023</td>
-											<td><span class="badge bg-success">Done</span></td>
-											<td class="d-none d-md-table-cell">William Harris</td>
-										</tr>
-										<tr>
-											<td>Project X</td>
-											<td class="d-none d-xl-table-cell">01/01/2023</td>
-											<td class="d-none d-xl-table-cell">31/06/2023</td>
-											<td><span class="badge bg-success">Done</span></td>
-											<td class="d-none d-md-table-cell">Sharon Lessman</td>
-										</tr>
-										<tr>
-											<td>Project Romeo</td>
-											<td class="d-none d-xl-table-cell">01/01/2023</td>
-											<td class="d-none d-xl-table-cell">31/06/2023</td>
-											<td><span class="badge bg-success">Done</span></td>
-											<td class="d-none d-md-table-cell">Christina Mason</td>
-										</tr>
-										<tr>
-											<td>Project Wombat</td>
-											<td class="d-none d-xl-table-cell">01/01/2023</td>
-											<td class="d-none d-xl-table-cell">31/06/2023</td>
-											<td><span class="badge bg-warning">In progress</span></td>
-											<td class="d-none d-md-table-cell">William Harris</td>
-										</tr>
+										{% endfor %}
 									</tbody>
 								</table>
 							</div>
