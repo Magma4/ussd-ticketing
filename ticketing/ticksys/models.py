@@ -1,7 +1,12 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import User
+import random
+import string
 
+
+def generate_ticket_number():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
 class Ticket(models.Model):
     TICKET_STATUS = [
         ('Assigned', 'Assigned'),
@@ -20,13 +25,23 @@ class Ticket(models.Model):
         ('Email', 'Email'),
     ]
 
+    CATEGORY = [
+        ('Credentials', 'Credentials'),
+        ('Fees & Payments', 'Fees & Payments'),
+        ('VClass', 'VClass'),
+        ('Transcript', 'Transcript'),
+        ('Admission', 'Admission'),
+        ('Wi-Fi', 'Wi-Fi'),
+        ('Other', 'Other')
+    ]
+
     # New UUID field for ticket number
     user = models.ForeignKey(User, models.CASCADE, null=True)
-    ticket_number = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    ticket_number = models.CharField(max_length=4, default=generate_ticket_number, unique=True, editable=False)
     id_number = models.CharField(max_length=20, unique=True)
     description = models.TextField()
     status = models.CharField(max_length=20, choices=TICKET_STATUS, default='Assigned')
-    category = models.CharField(max_length=100)
+    category = models.CharField(max_length=100, choices=CATEGORY)
     client_type = models.CharField(max_length=20, choices=CLIENT_TYPE)
     agent = models.CharField(max_length=100, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

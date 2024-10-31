@@ -1,0 +1,9 @@
+{% if tickets %}
+    <ul>
+    {% for ticket in tickets %}
+        <li>{{ ticket }}</li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No tickets found.</p>
+{% endif %}

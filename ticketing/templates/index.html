@@ -193,109 +193,109 @@
 						</button>
 					</div>
 			
-<!-- Modal for Create Ticket -->
-<div class="modal fade" id="createTicketModal" tabindex="-1" aria-labelledby="createTicketModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="createTicketModalLabel">Ticket Management</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            
-            <!-- Modal Body with Tabs -->
-            <div class="modal-body">
-                <!-- Tabs Navigation -->
-                <ul class="nav nav-tabs" id="ticketTabs" role="tablist">
-                    <!-- History Tab First -->
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link active" id="ticket-history-tab" data-bs-toggle="tab" href="#ticket-history" role="tab" aria-controls="ticket-history" aria-selected="true">History</a>
-                    </li>
-                    <!-- Create Ticket Tab Second -->
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="create-ticket-tab" data-bs-toggle="tab" href="#create-ticket" role="tab" aria-controls="create-ticket" aria-selected="false">Create Ticket</a>
-                    </li>
-                </ul>
-
-                <!-- Tabs Content -->
-                <div class="tab-content" id="ticketTabsContent">
-                    <!-- History Tab -->
-                    <div class="tab-pane fade show active" id="ticket-history" role="tabpanel" aria-labelledby="ticket-history-tab">
-                        <!-- Search Bar for ID Number -->
-                        <form id="searchHistoryForm">
-                            <div class="mb-3">
-                                <label for="searchIdNumber" class="form-label">Search by ID Number</label>
-                                <input type="text" class="form-control" id="searchIdNumber" placeholder="Enter ID number">
-                            </div>
-                            <button type="submit" class="btn btn-primary">Search</button>
-                        </form>
-
-                        <!-- Display Ticket History -->
-                        <div id="ticketHistoryContent" class="mt-3">
-                            <!-- History content will be dynamically populated based on search -->
-                            <p>No tickets found. Search for ticket history using ID Number.</p>
-                        </div>
-                    </div>
-
-                    <!-- Create Ticket Tab -->
-                    <div class="tab-pane fade" id="create-ticket" role="tabpanel" aria-labelledby="create-ticket-tab">
-                        <form id="ticketForm">
-                            <!-- Mode Dropdown -->
-                            <div class="mb-3">
-                                <label for="mode" class="form-label">Mode</label>
-                                <select class="form-select" id="mode">
-                                    <option value="phone">Walk-In</option>
-                                    <option value="email">Call</option>
-                                </select>
-                            </div>
-
-                            <!-- Client Dropdown -->
-                            <div class="mb-3">
-                                <label for="client" class="form-label">Client</label>
-                                <select class="form-select" id="client">
-                                    <option value="student">Student</option>
-                                    <option value="staff">Staff</option>
-                                </select>
-                            </div>
-
-                            <!-- ID Number Input -->
-                            <div class="mb-3">
-                                <label for="idNumber" class="form-label">ID Number</label>
-                                <input type="text" class="form-control" id="idNumber" placeholder="Enter ID number">
-                            </div>
-
-                            <!-- Category Dropdown -->
-                            <div class="mb-3">
-                                <label for="category" class="form-label">Category</label>
-                                <select class="form-select" id="category">
-                                    <option value="credentials">Credentials</option>
-                                    <option value="fees">Fees and Payment</option>
-                                    <option value="vclass">VClass</option>
-                                    <option value="transcript">Transcript</option>
-                                    <option value="admission">Admission</option>
-                                    <option value="wifi">Wi-Fi</option>
-									<option value="other">Other</option>
-                                </select>
-                            </div>
-
-                            <!-- Description Input -->
-                            <div class="mb-3">
-                                <label for="description" class="form-label">Description</label>
-                                <input type="text" class="form-control" id="description" placeholder="Type exact issue here...">
-                            </div>
-
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Modal Footer -->
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" class="btn btn-primary" id="submitTicketButton">Submit Ticket</button>
-            </div>
-        </div>
-    </div>
-</div>
+					<!-- Modal for Create Ticket -->
+					<div class="modal fade" id="createTicketModal" tabindex="-1" aria-labelledby="createTicketModalLabel" aria-hidden="true">
+						<div class="modal-dialog modal-dialog-centered modal-lg">
+							<div class="modal-content">
+								<div class="modal-header">
+									<h5 class="modal-title" id="createTicketModalLabel">Ticket Management</h5>
+									<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+								</div>
+			
+								<!-- Modal Body with Tabs -->
+								<div class="modal-body">
+									<!-- Tabs Navigation -->
+									<ul class="nav nav-tabs" id="ticketTabs" role="tablist">
+										<li class="nav-item" role="presentation">
+											<a class="nav-link active" id="ticket-history-tab" data-bs-toggle="tab" href="#ticket-history" role="tab" aria-controls="ticket-history" aria-selected="true">History</a>
+										</li>
+										<li class="nav-item" role="presentation">
+											<a class="nav-link" id="create-ticket-tab" data-bs-toggle="tab" href="#create-ticket" role="tab" aria-controls="create-ticket" aria-selected="false">Create Ticket</a>
+										</li>
+									</ul>
+			
+									<!-- Tabs Content -->
+									<div class="tab-content" id="ticketTabsContent">
+										<!-- History Tab -->
+										<div class="tab-pane fade show active" id="ticket-history" role="tabpanel" aria-labelledby="ticket-history-tab">
+											<!-- Search Bar for ID Number -->
+											<form id="searchHistoryForm">
+												{% csrf_token %}
+												<div class="mb-3">
+													<label for="searchIdNumber" class="form-label">Search by ID Number</label>
+													<input type="text" class="form-control" id="searchIdNumber" name="id_number" placeholder="Enter ID number">
+												</div>
+												<button type="submit" class="btn btn-primary">Search</button>
+											</form>
+			
+											<!-- Display Ticket History -->
+											<div id="ticketHistoryContent" class="mt-3">
+												<p>No tickets found. Search for ticket history using ID Number.</p>
+											</div>
+										</div>
+			
+										<!-- Create Ticket Tab -->
+										<!-- Create Ticket Tab -->
+										<div class="tab-pane fade" id="create-ticket" role="tabpanel" aria-labelledby="create-ticket-tab">
+											<form id="ticketForm">
+												<!-- Mode Dropdown -->
+												<div class="mb-3">
+													<label for="mode" class="form-label">Mode</label>
+													<select class="form-select" id="mode">
+														<option value="phone">Walk-In</option>
+														<option value="email">Call</option>
+													</select>
+												</div>
+					
+												<!-- Client Dropdown -->
+												<div class="mb-3">
+													<label for="client" class="form-label">Client</label>
+													<select class="form-select" id="client">
+														<option value="student">Student</option>
+														<option value="staff">Staff</option>
+													</select>
+												</div>
+					
+												<!-- ID Number Input -->
+												<div class="mb-3">
+													<label for="idNumber" class="form-label">ID Number</label>
+													<input type="text" class="form-control" id="idNumber" placeholder="Enter ID number">
+												</div>
+					
+												<!-- Category Dropdown -->
+												<div class="mb-3">
+													<label for="category" class="form-label">Category</label>
+													<select class="form-select" id="category">
+														<option value="credentials">Credentials</option>
+														<option value="fees">Fees and Payment</option>
+														<option value="vclass">VClass</option>
+														<option value="transcript">Transcript</option>
+														<option value="admission">Admission</option>
+														<option value="wifi">Wi-Fi</option>
+														<option value="other">Other</option>
+													</select>
+												</div>
+					
+												<!-- Description Input -->
+												<div class="mb-3">
+													<label for="description" class="form-label">Description</label>
+													<input type="text" class="form-control" id="description" placeholder="Type exact issue here...">
+												</div>
+					
+											</form>
+										</div>
+									
+									</div>
+								</div>
+			
+								<!-- Modal Footer -->
+								<div class="modal-footer">
+									<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+									<button type="submit" class="btn btn-primary" id="submitTicketButton">Submit Ticket</button>
+								</div>
+							</div>
+						</div>
+					</div>
 
 
 			
@@ -389,6 +389,7 @@
 								<table class="table table-hover my-0">
 									<thead>
 										<tr>
+											<th>Ticket Number</th>
 											<th>Time Stamp</th>
 											<th class="d-none d-xl-table-cell">ID Number</th>
 											<th class="d-none d-xl-table-cell">Category</th>
@@ -399,10 +400,11 @@
 									<tbody> 
 										{% for ticket in tickets %}
 										<tr>
+											<td>{{ticket.ticket_number}}</td>
 											<td>{{ticket.created_at}}</td>
 											<td class="d-none d-xl-table-cell">{{ticket.id_number}}</td>
 											<td class="d-none d-xl-table-cell">{{ticket.category}}</td>
-											<td><span class="badge bg-success">{{ticket.status}}</span></td>
+											<td><span class="badge {% if ticket.status == 'Done' %}bg-success {% elif ticket.status == 'In Progress' %}bg-warning{% else %}bg-danger{% endif %}">{{ticket.status}}</span></td>
 											<td class="d-none d-md-table-cell">{{ticket.user.first_name|title}} {{ticket.user.last_name|title}}</td>
 										</tr>
 										{% endfor %}
@@ -546,6 +548,7 @@
 	</script>
 	<script>
 		document.addEventListener("DOMContentLoaded", function() {
+			
 			// Bar chart
 			new Chart(document.getElementById("chartjs-dashboard-bar"), {
 				type: "bar",
@@ -601,6 +604,26 @@
 			});
 		});
 	</script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    // AJAX for searching ticket history
+    $('#searchHistoryForm').on('submit', function(event) {
+        event.preventDefault();
+
+        $.ajax({
+            url: '{% url "search_ticket" %}',  // URL for the search_ticket view
+            method: 'POST',
+            data: $(this).serialize(),  // Serialize form data
+            success: function(response) {
+                $('#ticketHistoryContent').html(response.html);  // Update the content with search results
+            },
+            error: function() {
+                $('#ticketHistoryContent').html('<p>Error retrieving tickets. Please try again.</p>');
+            }
+        });
+    });
+</script>
 
 </body>
 
