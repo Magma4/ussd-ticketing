@@ -38,7 +38,7 @@ class Ticket(models.Model):
     # New UUID field for ticket number
     user = models.ForeignKey(User, models.CASCADE, null=True)
     ticket_number = models.CharField(max_length=4, default=generate_ticket_number, unique=True, editable=False)
-    id_number = models.CharField(max_length=20, unique=True)
+    id_number = models.CharField(max_length=20, unique=False)
     description = models.TextField()
     status = models.CharField(max_length=20, choices=TICKET_STATUS, default='Assigned')
     category = models.CharField(max_length=100, choices=CATEGORY)

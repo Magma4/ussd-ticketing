@@ -1,9 +1,28 @@
 {% if tickets %}
-    <ul>
-    {% for ticket in tickets %}
-        <li>{{ ticket }}</li>
-    {% endfor %}
-    </ul>
+<table class="table table-hover my-0">
+    <thead>
+        <tr>
+            <th>Ticket Number</th>
+            <th>Time Stamp</th>
+            <th class="d-none d-xl-table-cell">ID Number</th>
+            <th class="d-none d-xl-table-cell">Category</th>
+            <th>Status</th>
+            <th class="d-none d-md-table-cell">Agent</th>
+        </tr>
+    </thead>
+    <tbody> 
+        {% for ticket in tickets %}
+        <tr>
+            <td>{{ticket.ticket_number}}</td>
+            <td>{{ticket.created_at}}</td>
+            <td class="d-none d-xl-table-cell">{{ticket.id_number}}</td>
+            <td class="d-none d-xl-table-cell">{{ticket.category}}</td>
+            <td><span class="badge {% if ticket.status == 'Done' %}bg-success {% elif ticket.status == 'In Progress' %}bg-warning{% else %}bg-danger{% endif %}">{{ticket.status}}</span></td>
+            <td class="d-none d-md-table-cell">{{ticket.user.first_name|title}} {{ticket.user.last_name|title}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 {% else %}
     <p>No tickets found.</p>
 {% endif %}
