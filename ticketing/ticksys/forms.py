@@ -86,3 +86,23 @@ class Register(UserCreationForm):
 
 class TicketSearchForm(forms.Form):
     id_number = forms.CharField(label='Enter ID number', max_length=100)
+
+    # forms.py
+from django import forms
+from .models import Ticket
+
+class TicketForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        super().__init__(*args, **kwargs)
+        # Example: Customize form fields based on request
+        if self.request and self.request.user:
+            # Customize form fields here based on user or request data
+            pass
+
+    class Meta:
+        model = Ticket
+        fields = ['mode', 'client_type', 'id_number', 'category', 'description']
+        widgets = {
+            'description': forms.TextInput(attrs={'placeholder': 'Type exact issue here...'}),
+        }

@@ -1,4 +1,5 @@
 {% load static %}
+{% load widget_tweaks %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -201,7 +202,7 @@
 									<h5 class="modal-title" id="createTicketModalLabel">Ticket Management</h5>
 									<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 								</div>
-			
+					
 								<!-- Modal Body with Tabs -->
 								<div class="modal-body">
 									<!-- Tabs Navigation -->
@@ -213,7 +214,7 @@
 											<a class="nav-link" id="create-ticket-tab" data-bs-toggle="tab" href="#create-ticket" role="tab" aria-controls="create-ticket" aria-selected="false">Create Ticket</a>
 										</li>
 									</ul>
-			
+					
 									<!-- Tabs Content -->
 									<div class="tab-content" id="ticketTabsContent">
 										<!-- History Tab -->
@@ -227,71 +228,39 @@
 												</div>
 												<button type="submit" class="btn btn-primary">Search</button>
 											</form>
-			
+					
 											<!-- Display Ticket History -->
 											<div id="ticketHistoryContent" class="mt-3">
 												<p>No tickets found. Search for ticket history using ID Number.</p>
 											</div>
 										</div>
-			
-										<!-- Create Ticket Tab -->
+					
 										<!-- Create Ticket Tab -->
 										<div class="tab-pane fade" id="create-ticket" role="tabpanel" aria-labelledby="create-ticket-tab">
-											<form id="ticketForm">
-												<!-- Mode Dropdown -->
-												<div class="mb-3">
-													<label for="mode" class="form-label">Mode</label>
-													<select class="form-select" id="mode">
-														<option value="phone">Walk-In</option>
-														<option value="email">Call</option>
-													</select>
+											<form method="post" action="{% url 'create_ticket' %}" class="form-horizontal">
+												{% csrf_token %}
+												<div class="modal-body" style="text-align: left;">
+													{% for field in form %}
+													<div class="form-group" style="text-align: left;">
+														<label for="{{ field.id_for_label }}" class="col-form-label">{{ field.label }}</label>
+														{% render_field field class="form-control" %}
+														{% if field.errors %}
+														<div class="alert alert-danger">
+															{% for error in field.errors %}
+															<p class="help-block">{{ error }}</p>
+															{% endfor %}
+														</div>
+														{% endif %}
+													</div>
+													{% endfor %}
 												</div>
 					
-												<!-- Client Dropdown -->
-												<div class="mb-3">
-													<label for="client" class="form-label">Client</label>
-													<select class="form-select" id="client">
-														<option value="student">Student</option>
-														<option value="staff">Staff</option>
-													</select>
+												<div class="modal-footer">
+													<button type="submit" class="btn btn-primary">Submit</button>
 												</div>
-					
-												<!-- ID Number Input -->
-												<div class="mb-3">
-													<label for="idNumber" class="form-label">ID Number</label>
-													<input type="text" class="form-control" id="idNumber" placeholder="Enter ID number">
-												</div>
-					
-												<!-- Category Dropdown -->
-												<div class="mb-3">
-													<label for="category" class="form-label">Category</label>
-													<select class="form-select" id="category">
-														<option value="credentials">Credentials</option>
-														<option value="fees">Fees and Payment</option>
-														<option value="vclass">VClass</option>
-														<option value="transcript">Transcript</option>
-														<option value="admission">Admission</option>
-														<option value="wifi">Wi-Fi</option>
-														<option value="other">Other</option>
-													</select>
-												</div>
-					
-												<!-- Description Input -->
-												<div class="mb-3">
-													<label for="description" class="form-label">Description</label>
-													<input type="text" class="form-control" id="description" placeholder="Type exact issue here...">
-												</div>
-					
 											</form>
 										</div>
-									
 									</div>
-								</div>
-			
-								<!-- Modal Footer -->
-								<div class="modal-footer">
-									<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-									<button type="submit" class="btn btn-primary" id="submitTicketButton">Submit Ticket</button>
 								</div>
 							</div>
 						</div>
@@ -398,7 +367,7 @@
 										</tr>
 									</thead>
 									<tbody> 
-										{% for ticket in tickets %}
+										{% for ticket in recent_tickets %}
 										<tr>
 											<td>{{ticket.ticket_number}}</td>
 											<td>{{ticket.created_at}}</td>
@@ -624,6 +593,38 @@
         });
     });
 </script>
+
+<!-- <script>
+    $('#ticketForm').on('submit', function(event) {
+        event.preventDefault();
+        $.ajax({
+            url: '{% url "create_ticket" %}',
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                $('#createTicketModal').modal('hide');
+                location.reload();
+            },
+            error: function() {
+                alert('Error creating ticket.');
+            }
+        });
+    });
+</script> -->
+
+<script type="text/javascript">
+    $(function () {
+        
+        
+        $("#createTicketModal").modalForm({
+            formURL: "{% url 'create_ticket' %}",
+            modalID: "#createTicketModal"
+        });
+
+       
+  
+    });
+  </script>
 
 </body>
 

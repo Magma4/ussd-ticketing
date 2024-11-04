@@ -20,6 +20,7 @@
                                 <table class="table table-hover my-0 w-100" id="ticketTable">
                                     <thead>
                                         <tr>
+                                            <th>Ticket ID</th>
                                             <th>Time Stamp</th>
                                             <th>Client</th>
                                             <th>ID Number</th>
@@ -31,55 +32,21 @@
                                     </thead>
                                     <tbody id="ticketTableBody">
                                         <!-- Ticket rows will be dynamically added here -->
-                                        <tr>
-                                            <td>12/08/2024, 8:53:41 am</td>
-                                            <td>Staff</td>
-                                            <td>6178022</td>
-                                            <td>Credentials</td>
-                                            <td><span class="badge bg-success">Done</span></td>
-                                            <td>eagyemang</td>
-                                            <td><button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#ticketInfoModal">Info</button></td>
-                                        </tr>
+                                        
+                                        {% for ticket in tickets_by_user %}
+                                            <tr>
+                                                <td>{{ticket.ticket_number}}</td>
+                                                <td>{{ticket.created_at}}</td>
+                                                <td>{{ticket.client_type}}</td>
+                                                <td class="d-none d-xl-table-cell">{{ticket.id_number}}</td>
+                                                <td class="d-none d-xl-table-cell">{{ticket.category}}</td>
+                                                <td><span class="badge {% if ticket.status == 'Done' %}bg-success {% elif ticket.status == 'In Progress' %}bg-warning{% else %}bg-danger{% endif %}">{{ticket.status}}</span></td>
+                                                <td class="d-none d-md-table-cell">{{ticket.user.username}}</td>
+                                                <td><button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#ticketInfoModal">Info</button></td>
+                                            </tr>
+                                            {% endfor %}
         
-                                        <tr>
-                                            <td>12/08/2024, 8:53:41 am</td>
-                                            <td>Student</td>
-                                            <td>21046389</td>
-                                            <td>Wifi</td>
-                                            <td><span class="badge bg-warning">In progress</span></td>
-                                            <td>eagyemang</td>
-                                            <td><button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#ticketInfoModal">Info</button></td>
-                                        </tr>
-        
-                                        <tr>
-                                            <td>13/09/2024, 8:53:41 am</td>
-                                            <td>Student</td>
-                                            <td>20874638</td>
-                                            <td>Transcript</td>
-                                            <td><span class="badge bg-success">Done</span></td>
-                                            <td>eagyemang</td>
-                                            <td><button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#ticketInfoModal">Info</button></td>
-                                        </tr>
-        
-                                        <tr>
-                                            <td>14/09/2024, 10:16:41 am</td>
-                                            <td>Staff</td>
-                                            <td>6207479</td>
-                                            <td>Credentials</td>
-                                            <td><span class="badge bg-success">Done</span></td>
-                                            <td>eagyemang</td>
-                                            <td><button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#ticketInfoModal">Info</button></td>
-                                        </tr>
-        
-                                        <tr>
-                                            <td>19/09/2024, 11:23:21 am</td>
-                                            <td>Student</td>
-                                            <td>20746468</td>
-                                            <td>Vclass</td>
-                                            <td><span class="badge bg-warning">In progress</span></td>
-                                            <td>eagyemang</td>
-                                            <td><button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#ticketInfoModal">Info</button></td>
-                                        </tr>
+                                       
                                     </tbody>
                                 </table>
                             </div>

@@ -7,4 +7,6 @@ urlpatterns = [
     path('ticketlogs/', views.ticketlogs, name='ticketlogs'),
     path('faqs/', views.faqs, name='faqs'),
     path('search_ticket/', views.search_ticket, name='search_ticket'),
+    path('create_ticket/', views.TicketCreateView.as_view(), name='create_ticket'),
+
 ]
