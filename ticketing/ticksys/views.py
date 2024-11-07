@@ -42,6 +42,7 @@ class TicketCreateView(CreateView):
         instance = form.save(commit=False)
         instance.user = self.request.user  # Assign the user to the instance
         instance.save()
+        messages.success(self.request, "Ticket created")
         return super().form_valid(form)
 
 # Update
@@ -122,7 +123,7 @@ def index(request):
     form = TicketForm()
     tickets = Ticket.objects.all()
     tickets_by_user = Ticket.objects.filter(user=user).count()
-    recent_tickets = Ticket.objects.filter(user=user).order_by('-created_at')[:10]
+    recent_tickets = Ticket.objects.filter(user=user).order_by('-created_at')[:8]
 
     current_year = timezone.now().year
     tickets_by_month = Ticket.objects.filter(created_at__year=current_year).annotate(

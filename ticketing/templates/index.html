@@ -32,6 +32,37 @@
 </head>
 
 <body>
+	{% for message in messages %}
+
+  <div class="toast notification bg-{% if message.tags == 'error' %}danger{% else %}{{message.tags}}{% endif %}" role="alert" aria-live="assertive" aria-atomic="true" data-delay="4000" style="
+    position: absolute;
+    top: 10rem;
+    right: 1rem;
+    z-index: 1000;
+    color: white;
+    font-weight: normal;
+">
+    <div class="toast-header">
+      <strong class="mr-auto">
+        {% if message.tags == 'error' %}
+          <i class="fas fa-times mr-2"></i>
+        {% elif message.tags == 'warning' %}
+          <i class="fas fa-exclamation mr-2"></i>
+        {% elif message.tags == 'info' %}
+          <i class="fas fa-info mr-2"></i>
+        {% elif message.tags == 'success' %}
+          <i class="fas fa-check mr-2"></i>
+        {% endif %}
+        {{message.tags|capfirst}}
+      </strong>
+      
+    </div>
+    <div class="toast-body">
+      {{message|safe}}
+    </div>
+  </div>
+{% endfor %}
+
 	<div class="wrapper">
 		<nav id="sidebar" class="sidebar js-sidebar">
 			<div class="sidebar-content js-simplebar">
@@ -369,7 +400,7 @@
 									<tbody> 
 										{% for ticket in recent_tickets %}
 										<tr>
-											<td>{{ticket.ticket_number}}</td>
+											<td>#{{ticket.ticket_number}}</td>
 											<td>{{ticket.created_at}}</td>
 											<td class="d-none d-xl-table-cell">{{ticket.id_number}}</td>
 											<td class="d-none d-xl-table-cell">{{ticket.category}}</td>
