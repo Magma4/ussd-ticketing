@@ -17,6 +17,7 @@ from bootstrap_modal_forms.generic import (
   BSModalDeleteView
 )
 from django.views.generic.edit import CreateView
+from django.contrib.auth.models import User
 
 
 # Create your views here.
@@ -158,10 +159,12 @@ def index(request):
 
 def ticketlogs(request):
     user = request.user
+    all_users = User.objects.all()  # Retrieve all users to populate the dropdown
     tickets_by_user = Ticket.objects.filter(user=user).order_by('-created_at')
 
     context = {
-        'tickets_by_user' : tickets_by_user
+        'tickets_by_user' : tickets_by_user,
+        'all_users' : all_users
     }
 
     return render(request, 'ticketlogs.html', context)
@@ -198,35 +201,15 @@ def create_ticket(request):
     return render(request, 'ticket_form_modal.html', {'form': form})
 
 
-# def update_ticket_status(request, ticket_number):
-#     """This function updates ticket status"""
-#     user = request.user
-#     if request.method == 'POST':
-#         tickets = get_object_or_404(Ticket, id=ticket_number)
-#         new_status = request.POST.get('status')
-
-#         try:
-#             # Check if the status is being changed to 'released'
-#             if new_status == 'Assigned':
-#                 Ticket.status = new_status
-#                 tickets.approved_by = request.user.username  # Set the approved_by field to the username of the admin
-#                 tickets.save()
-#                 messages.success(request, f"Request with ID {ticket_number} has been Assigned by {request.user.username}.")
-#             elif new_status == 'released':
-#                 order.status = new_status
-#                 order.released_by = request.user.username  # Set the released_by field to the username of the admin
-#                 order.save()
-#                 messages.success(request, f"Request with ID {order.id} has been released by {request.user.username}.")
-#             elif new_status == 'returned':
-#                 order.status = new_status
-#                 order.returned_to = request.user.username  # Set the returned_to field to the username of the admin
-#                 order.save()
-#                 messages.success(request, f"Request with ID {order.id} has been received by {request.user.username}.")
-#             else:
-#                 order.status = new_status
-#                 order.save()
-#                 messages.success(request, f"Request {order.id} status has been updated.")
-#         except ValidationError as e:
-#             messages.error(request, e.message)
-    
-#     return redirect('view-request')
+def update_ticket_status(request, ticket_id):
+    if request.method == 'POST':
+        ticket = get_object_or_404(Ticket, id=ticket_id)
+        ticket.status = request.POST.get('status')
+        
+        # Update the agent field instead of assigned_user
+        assigned_user_username = request.POST.get('assigned_user')
+        if assigned_user_username:
+            ticket.agent = assigned_user_username  # Store the username in the agent field
+        
+        ticket.save()
+        return redirect('ticketlogs')  # Redirect to the appropriate view after saving

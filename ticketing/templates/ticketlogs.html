@@ -47,42 +47,50 @@
                                                 </button>
                                             
                                                 <!-- Modal -->
-                                                <div class="modal fade" id="infoModal{{ ticket.id }}" tabindex="-1" aria-labelledby="infoModalLabel{{ ticket.id }}" aria-hidden="true" >
+                                                <div class="modal fade" id="infoModal{{ ticket.id }}" tabindex="-1" aria-labelledby="infoModalLabel{{ ticket.id }}" aria-hidden="true">
                                                     <div class="modal-dialog modal-dialog-centered">
                                                         <div class="modal-content">
                                                             <div class="modal-header">
-                                                                <h1 class="modal-title fs-5" id="infoModalLabel{{ order.id }}">More Information</h1>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+                                                                <h1 class="modal-title fs-5" id="infoModalLabel{{ ticket.id }}">More Information</h1>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                             </div>
                                                             <div class="modal-body">
                                                                 <p><b>ID Number</b>: {{ ticket.id_number|title }}</p>
                                                                 <p><b>Client Type</b>: {{ ticket.client_type }}</p>
                                                                 <p><b>Description</b>: {{ ticket.description }}</p>
-                                                                <div class="form-group">
-                                                                    <label for="ticketStatus">Status:</label>
-                                                                    <select class="form-control" id="ticketStatus" onchange="toggleAssignField()">
-                                                                        <option value="In progress">In progress</option>
-                                                                        <option value="Done">Done</option>
-                                                                        <option value="Assigned">Assigned</option>
-                                                                    </select>
-                                                                </div>
-                                            
-                                                                <div class="form-group" id="assignUserGroup" style="display: none;">
-                                                                    <label for="assignUser">Assign To:</label>
-                                                                    <select class="form-control" id="assignUser">
-                                                                        <option>eagyemang</option>
-                                                                        <option>gavornyo</option>
-                                                                        <option>raymond.frimpong</option>
-                                                                        <!-- Add more users here -->
-                                                                    </select>
-                                                                </div>
-                                                                <!-- <p><b>Approved By</b>: {{ order.approved_by|title }}</p>
-                                                                <p><b>Released By</b>: {{ order.released_by|title }}</p>
-                                                                <p><b>Returned To</b>: {{ order.returned_to|title }}</p> -->
+                                                
+                                                                <form method="post" action="{% url 'update_ticket_status' ticket.id %}">
+                                                                    {% csrf_token %}
+                                                                    
+                                                                    <div class="form-group">
+                                                                        <label for="ticketStatus">Status:</label>
+                                                                        <select class="form-control" id="ticketStatus" name="status" onchange="toggleAssignField(this.value)">
+                                                                            <option value="In Progress">In Progress</option>
+                                                                            <option value="Done">Done</option>
+                                                                            <option value="Assigned">Assigned</option>
+                                                                        </select>
+                                                                    </div>
+                                                                
+                                                                    <div class="form-group" id="assignUserGroup" style="display: block;">
+                                                                        <label for="assignUser">Assign To:</label>
+                                                                        <select class="form-control" id="assignUser" name="assigned_user">
+                                                                            {% for user in all_users %}
+                                                                                <option value="{{ user.username }}">{{ user.username }}</option>
+                                                                            {% endfor %}
+                                                                        </select>
+                                                                    </div>
+                                                                
+                                                                    <div class="modal-footer">
+                                                                        <button type="submit" class="btn btn-primary">Save</button>
+                                                                    </div>
+                                                                </form>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div></td>
+                                                </div>
+                                                
+                                    
+                                                
                                             </tr>
                                             {% endfor %}
         
@@ -95,55 +103,7 @@
                 </div>
             </main>
         
-<!-- Modal -->
-<div class="modal fade" id="ticketInfoModal" tabindex="-1" aria-labelledby="ticketInfoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="ticketInfoModalLabel">Ticket Information</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="ticketForm">
-                    <div class="form-group">
-                        <label for="ticketID">ID Number:</label>
-                        <p></p>
-                    </div>
 
-                    <div class="form-group">
-                        <label for="ticketDescription">Description:</label>
-                        <p>{Issue Here}</p>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="ticketStatus">Status:</label>
-                        <select class="form-control" id="ticketStatus" onchange="toggleAssignField()">
-                            <option value="In progress">In progress</option>
-                            <option value="Done">Done</option>
-                            <option value="Assigned">Assigned</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group" id="assignUserGroup" style="display: none;">
-                        <label for="assignUser">Assign To:</label>
-                        <select class="form-control" id="assignUser">
-                            <option>eagyemang</option>
-                            <option>gavornyo</option>
-                            <option>raymond.frimpong</option>
-                            <!-- Add more users here -->
-                        </select>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary">Save</button>
-            </div>
-        </div>
-    </div>
-</div>
         {% endblock %}
 
 			<footer class="footer">
@@ -166,18 +126,16 @@
     </script>
 
 <script>
-    function toggleAssignField() {
-        var status = document.getElementById("ticketStatus").value;
-        var assignField = document.getElementById("assignUserGroup");
-
-        if (status === "Assigned") {
-            assignField.style.display = "block";  // Show the "Assign To" field
+    function toggleAssignField(status) {
+        const assignUserGroup = document.getElementById('assignUserGroup');
+        
+        if (status === 'Assigned') {
+            assignUserGroup.style.display = 'block';  // Show the "Assign To" field
         } else {
-            assignField.style.display = "none";   // Hide the "Assign To" field
+            assignUserGroup.style.display = 'none';   // Hide the "Assign To" field
         }
     }
 </script>
-
 
 </body>
 
