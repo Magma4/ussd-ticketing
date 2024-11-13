@@ -213,7 +213,7 @@ def update_ticket_status(request, ticket_id):
         if assigned_user_username:
             assigned_user = get_object_or_404(User, username=assigned_user_username)
             ticket.user = assigned_user  # Set the user field to the assigned user instance
-        
+            messages.success(request, f'Ticket has been assigned to {assigned_user}')
         ticket.save()
         return redirect('ticketlogs')  # Redirect to ticketlogs view or any desired view
     

@@ -36,7 +36,7 @@
 
   <div class="toast notification bg-{% if message.tags == 'error' %}danger{% else %}{{message.tags}}{% endif %}" role="alert" aria-live="assertive" aria-atomic="true" data-delay="4000" style="
     position: absolute;
-    top: 10rem;
+    top: 5rem;
     right: 1rem;
     z-index: 1000;
     color: white;
@@ -657,6 +657,12 @@
     });
   </script>
 
+<script>
+	$(document).ready(function() {
+	  $('.toast').toast('show');  // Show all toasts on page load
+	});
+  </script>
+  
 </body>
 
 </html>
