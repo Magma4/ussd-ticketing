@@ -8,7 +8,7 @@ from django.db.models.functions import TruncMonth
 from django.db.models import Count
 from datetime import datetime
 from django.template.loader import render_to_string
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.views import generic
 from django.urls import reverse_lazy, reverse
 from bootstrap_modal_forms.generic import (
@@ -139,8 +139,10 @@ def index(request):
         ticket_counts[month_index] = order['count']
 
     today = timezone.now().date()
-    user_tickets_today = Ticket.objects.filter(user=user, created_at__date=today).count()
-    assigned_to = Ticket.objects.filter( agent=user, status='Assigned' or 'In Progress').count()
+    assigned_to_today = Ticket.objects.filter( user=user, status='Assigned' or 'In Progress', created_at__date=today).count()
+    user_tickets_today = Ticket.objects.filter(user=user, created_at__date=today).count() + assigned_to_today
+    
+    assigned_to = Ticket.objects.filter( user=user, status='Assigned' or 'In Progress').count()
     total_resolved = Ticket.objects.filter(user=user, status='Done').count()
     context = {
         'user' : user,
@@ -206,10 +208,14 @@ def update_ticket_status(request, ticket_id):
         ticket = get_object_or_404(Ticket, id=ticket_id)
         ticket.status = request.POST.get('status')
         
-        # Update the agent field instead of assigned_user
+        # Update the assigned user (agent)
         assigned_user_username = request.POST.get('assigned_user')
         if assigned_user_username:
-            ticket.agent = assigned_user_username  # Store the username in the agent field
+            assigned_user = get_object_or_404(User, username=assigned_user_username)
+            ticket.user = assigned_user  # Set the user field to the assigned user instance
         
         ticket.save()
-        return redirect('ticketlogs')  # Redirect to the appropriate view after saving
+        return redirect('ticketlogs')  # Redirect to ticketlogs view or any desired view
+    
+    # If the request method is not POST, redirect to a default page or raise an error
+    return HttpResponseRedirect('/')

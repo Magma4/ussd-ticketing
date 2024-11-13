@@ -35,15 +35,13 @@ class Ticket(models.Model):
         ('Other', 'Other')
     ]
 
-    # New UUID field for ticket number
-    user = models.ForeignKey(User, models.CASCADE, null=True)
+    user = models.ForeignKey(User, models.CASCADE, null=True, related_name='assigned_tickets')
     ticket_number = models.CharField(max_length=4, default=generate_ticket_number, unique=True, editable=False)
     id_number = models.CharField(max_length=20, unique=False)
     description = models.TextField()
     status = models.CharField(max_length=20, choices=TICKET_STATUS, default='In Progress')
     category = models.CharField(max_length=100, choices=CATEGORY)
     client_type = models.CharField(max_length=20, choices=CLIENT_TYPE, default='Student')
-    agent = models.CharField(max_length=100, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     mode = models.CharField(max_length=20, choices=MODE_CHOICES, default='Walk-In')
