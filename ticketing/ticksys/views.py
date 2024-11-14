@@ -141,8 +141,8 @@ def index(request):
         ticket_counts[month_index] = order['count']
 
     today = timezone.now().date()
-    assigned_to_today = Ticket.objects.filter( user=user, status='Assigned' or 'In Progress', created_at__date=today).count()
-    user_tickets_today = Ticket.objects.filter(user=user, created_at__date=today).count() + assigned_to_today
+    # assigned_to_today = Ticket.objects.filter( user=user, updated_at__date=today).count()
+    user_tickets_today = Ticket.objects.filter(user=user, created_at__date=today, updated_at__date=today).count()
     
     assigned_to = Ticket.objects.filter( user=user, status='Assigned' or 'In Progress').count()
     total_resolved = Ticket.objects.filter(user=user, status='Done').count()
