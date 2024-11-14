@@ -205,7 +205,7 @@ def create_ticket(request):
             ticket = form.save(commit=False)
             ticket.user = request.user  # Associate the logged-in user with the ticket
             ticket.save()
-            messages.success(request, 'Ticket has been created successfully.')
+            messages.success(request, 'Ticket has been created successfully')
             return redirect('dashboard')  # Redirect to the dashboard or any other view
     else:
         form = TicketForm()
