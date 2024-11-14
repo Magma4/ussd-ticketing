@@ -11,9 +11,14 @@
                                     <h5 class="card-title mb-0">Ticket Logs</h5>
         
                                     <!-- Search Bar -->
-                                    <div>
-                                        <input type="text" id="searchInput" class="form-control" placeholder="Search by ID Number" onkeyup="searchTable()">
-                                    </div>
+                                    <form class="row g-2" role="search" action="{% url 'searchdata' %}" method="GET">
+                                        <div class="col-auto">
+                                            <input type="search" class="form-control" placeholder="Search" aria-label="Search" name="query" value="{{ query|default:'' }}">
+                                        </div>
+                                        <div class="col-auto">
+                                            <button type="submit" class="btn btn-outline-success">Search</button>
+                                        </div>
+                                    </form>
                                 </div>
         
                                 <!-- Table -->
@@ -32,8 +37,12 @@
                                     </thead>
                                     <tbody id="ticketTableBody">
                                         <!-- Ticket rows will be dynamically added here -->
-                                        
-                                        {% for ticket in tickets_by_user %}
+                                        {% if page_obj.object_list|length == 0 %}
+                                        <tr>
+                                            <td colspan="8" style="text-align: center;"><h5>No results found</h5></td>
+                                        </tr>
+                                        {% endif %}
+                                        {% for ticket in page_obj %}
                                             <tr>
                                                 <td>#{{ticket.ticket_number}}</td>
                                                 <td>{{ticket.created_at}}</td>
@@ -97,10 +106,50 @@
                                     </tbody>
                                 </table>
                             </div>
+                            
+                            
+                        </div>
+                        <div class="pagination justify-content-center">
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination">
+                                    {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1" aria-label="First">
+                                            <span aria-hidden="true">&laquo;&laquo;</span>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                    {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                    <li class="page-item active"><a class="page-link">{{ num }}</a></li>
+                                    {% elif num > page_obj.number|add:'-5' and num < page_obj.number|add:'5' %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                    {% endif %}
+                                    {% endfor %}
+                                    {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                            <span aria-hidden="true">&raquo;&raquo;</span>
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
                         </div>
                     </div>
                 </div>
             </main>
+            
         
 
         {% endblock %}

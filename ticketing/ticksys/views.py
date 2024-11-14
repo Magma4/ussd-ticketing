@@ -4,13 +4,14 @@ from .forms import *
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.utils import timezone
-from django.db.models.functions import TruncMonth
+from django.db.models.functions import TruncMonth, ExtractMonth, ExtractDay, ExtractYear
 from django.db.models import Count
 from datetime import datetime
 from django.template.loader import render_to_string
 from django.http import JsonResponse, HttpResponseRedirect
 from django.views import generic
 from django.urls import reverse_lazy, reverse
+from django.db.models import Q, Sum
 from bootstrap_modal_forms.generic import (
   BSModalCreateView,
   BSModalUpdateView,
@@ -18,6 +19,7 @@ from bootstrap_modal_forms.generic import (
 )
 from django.views.generic.edit import CreateView
 from django.contrib.auth.models import User
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
 # Create your views here.
@@ -124,7 +126,7 @@ def index(request):
     form = TicketForm()
     tickets = Ticket.objects.all()
     tickets_by_user = Ticket.objects.filter(user=user).count()
-    recent_tickets = Ticket.objects.filter(user=user).order_by('-created_at')[:8]
+    recent_tickets = Ticket.objects.filter(user=user).order_by('-created_at')[:10]
 
     current_year = timezone.now().year
     tickets_by_month = Ticket.objects.filter(created_at__year=current_year).annotate(
@@ -161,12 +163,20 @@ def index(request):
 
 def ticketlogs(request):
     user = request.user
+    tickets = Ticket.objects.annotate(month=ExtractMonth('created_at'), day=ExtractDay('created_at'), year=ExtractYear('created_at')).order_by('-id').filter(user=user)
+    
+    # Paginate the orders, showing 10 per page
+    paginator = Paginator(tickets, 15)  # Show 10 orders per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
     all_users = User.objects.all()  # Retrieve all users to populate the dropdown
     tickets_by_user = Ticket.objects.filter(user=user).order_by('-created_at')
 
     context = {
         'tickets_by_user' : tickets_by_user,
-        'all_users' : all_users
+        'all_users' : all_users,
+        'page_obj' : page_obj,
     }
 
     return render(request, 'ticketlogs.html', context)
@@ -195,7 +205,7 @@ def create_ticket(request):
             ticket = form.save(commit=False)
             ticket.user = request.user  # Associate the logged-in user with the ticket
             ticket.save()
-            messages.success(request, 'Ticket created successfully.')
+            messages.success(request, 'Ticket has been created successfully.')
             return redirect('dashboard')  # Redirect to the dashboard or any other view
     else:
         form = TicketForm()
@@ -206,16 +216,56 @@ def create_ticket(request):
 def update_ticket_status(request, ticket_id):
     if request.method == 'POST':
         ticket = get_object_or_404(Ticket, id=ticket_id)
-        ticket.status = request.POST.get('status')
-        
-        # Update the assigned user (agent)
+        previous_status = ticket.status
+        new_status = request.POST.get('status')
         assigned_user_username = request.POST.get('assigned_user')
-        if assigned_user_username:
+
+        # Check if the assigned user is actually changing
+        user_changed = assigned_user_username and ticket.user != get_object_or_404(User, username=assigned_user_username)
+        
+        if user_changed:
+            # Only handle user assignment if it's actually a new user
             assigned_user = get_object_or_404(User, username=assigned_user_username)
-            ticket.user = assigned_user  # Set the user field to the assigned user instance
-            messages.success(request, f'Ticket has been assigned to {assigned_user}')
+            ticket.user = assigned_user
+            ticket.status = 'Assigned'
+            messages.success(request, f'Ticket #{ticket.ticket_number} has been assigned to {assigned_user}')
+        elif new_status and new_status != previous_status:
+            # Handle status change only if status is actually different
+            ticket.status = new_status
+            messages.success(request, f'Ticket #{ticket.ticket_number} status changed from {previous_status} to {new_status}')
+            
         ticket.save()
-        return redirect('ticketlogs')  # Redirect to ticketlogs view or any desired view
+        return redirect('ticketlogs')
     
-    # If the request method is not POST, redirect to a default page or raise an error
     return HttpResponseRedirect('/')
+
+def searchdata(request):
+    user = request.user
+    q = request.GET.get('query')  
+
+    if q:
+        try:
+            tickets_by_user = Ticket.objects.filter(user=user)
+            tickets = tickets_by_user.filter(
+                Q(ticket_number__icontains=q) |
+                Q(id_number__icontains=q)   
+            )
+        except ValueError:
+            tickets_by_user = Ticket.objects.filter(user=user)
+            tickets = tickets_by_user.filter(
+                Q(ticket_number__icontains=q) |
+                Q(id_number__icontains=q)
+            )
+    else:
+        tickets = tickets_by_user.all()
+        messages.error(request, "No results found")
+
+    paginator = Paginator(tickets, 10)  # Paginate the results, 10 per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'query': q, 
+    }
+    return render(request, 'ticketlogs.html', context=context)
