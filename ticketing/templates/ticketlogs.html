@@ -72,27 +72,23 @@
                                                 
                                                                 <form method="post" action="{% url 'update_ticket_status' ticket.id %}">
                                                                     {% csrf_token %}
+                                                                    <label for="status">Status:</label>
+                                                                    <select id="status" name="status" class="form-control">
+                                                                        <option value="In Progress" {% if ticket.status == "In Progress" %}selected{% endif %}>In Progress</option>
+                                                                        <option value="Done" {% if ticket.status == "Done" %}selected{% endif %}>Done</option>
+                                                                        <option value="Assigned" {% if ticket.status == "Assigned" %}selected{% endif %}>Assigned</option>
+                                                                    </select>
                                                                     
-                                                                    <div class="form-group">
-                                                                        <label for="ticketStatus">Status:</label>
-                                                                        <select class="form-control" id="ticketStatus" name="status" onchange="toggleAssignField(this.value)">
-                                                                            <option value="In Progress" {% if ticket.status == "In Progress" %}selected{% endif %}>In Progress</option>
-                                                                            <option value="Done" {% if ticket.status == "Done" %}selected{% endif %}>Done</option>
-                                                                        </select>
-                                                                    </div>
+                                                                    <label for="assigned_user">Assign To:</label>
+                                                                    <select id="assigned_user" name="assigned_user" class="form-control">
+                                                                        {% for user in all_users %}
+                                                                            <option value="{{ user.username }}" {% if ticket.assigned_to == user.username %}selected{% endif %}>
+                                                                                {{ user.username }}
+                                                                            </option>
+                                                                        {% endfor %}
+                                                                    </select>
                                                                 
-                                                                    <div class="form-group" id="assignUserGroup" style="display: block;">
-                                                                        <label for="assignUser">Assign To:</label>
-                                                                        <select class="form-control" id="assignUser" name="assigned_user">
-                                                                            {% for user in all_users %}
-                                                                                <option value="{{ user.username }}" {% if user == ticket.user %}selected{% endif %}>{{ user.username }}</option>
-                                                                            {% endfor %}
-                                                                        </select>
-                                                                    </div>
-                                                                
-                                                                    <div class="modal-footer">
-                                                                        <button type="submit" class="btn btn-primary">Save</button>
-                                                                    </div>
+                                                                    <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Save</button>
                                                                 </form>
                                                             </div>
                                                         </div>
