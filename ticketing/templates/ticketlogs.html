@@ -31,7 +31,8 @@
                                             <th>ID Number</th>
                                             <th>Category</th>
                                             <th>Status</th>
-                                            <th>Agent</th>
+                                            <th>Created By</th>
+                                            <th>Assigned To</th>
                                             <th>Description</th>
                                         </tr>
                                     </thead>
@@ -51,6 +52,7 @@
                                                 <td class="d-none d-xl-table-cell">{{ticket.category}}</td>
                                                 <td><span class="badge {% if ticket.status == 'Done' %}bg-success {% elif ticket.status == 'In Progress' %}bg-warning{% else %}bg-danger{% endif %}">{{ticket.status}}</span></td>
                                                 <td class="d-none d-md-table-cell">{{ticket.user.username}}</td>
+                                                <td class="d-none d-md-table-cell">{{ticket.assigned_to}}</td>
                                                 <td><button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#infoModal{{ ticket.id }}" data-bs-placement="top" data-bs-toggle="tooltip1" title="View More Information">
                                                     More
                                                 </button>

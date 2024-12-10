@@ -35,16 +35,18 @@ class Ticket(models.Model):
         ('Other', 'Other')
     ]
 
-    user = models.ForeignKey(User, models.CASCADE, null=True, related_name='assigned_tickets')
+    user = models.ForeignKey(User, models.CASCADE, null=True)
     ticket_number = models.CharField(max_length=4, default=generate_ticket_number, unique=True, editable=False)
     id_number = models.CharField(max_length=20, unique=False)
     description = models.TextField()
-    status = models.CharField(max_length=20, choices=TICKET_STATUS, default='In Progress')
+    status = models.CharField(max_length=25, choices=TICKET_STATUS, default='In Progress')
     category = models.CharField(max_length=100, choices=CATEGORY)
     client_type = models.CharField(max_length=20, choices=CLIENT_TYPE, default='Student')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     mode = models.CharField(max_length=20, choices=MODE_CHOICES, default='Walk-In')
+    assigned_to = models.CharField(max_length=30, null=True)
+    created_by = models.CharField(max_length=30, null=True)
 
     def __str__(self):
         return f"Ticket {self.ticket_number} - {self.id_number} - {self.category} ({self.status})"
@@ -56,5 +58,3 @@ class Agent(models.Model):
 
     def __str__(self):
         return self.username.username
-
-
