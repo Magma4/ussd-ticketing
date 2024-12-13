@@ -1,0 +1,207 @@
+{% extends 'index.html' %}
+
+    {% block content %}
+    <main class="content">
+        <div class="container-fluid p-0">
+            <div class="row">
+                <div class="col-12 d-flex">
+                    <div class="card flex-fill">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Report</h5>
+
+                            
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="btn-group me-1 mt-2">
+                                    <button class="btn btn-info btn-sm dropdown-toggle" type="button"
+                                        data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="margin-left: 1rem">
+                                        Download Report 
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item" href="{}">Excel</a>
+                                        <a class="dropdown-item" href="{}">PDF</a>
+                                    </div>
+                                </div>
+                
+                            </div>
+                            
+                        </div>
+                        <br>
+                        <div class="col-12">
+                            <form action="{% url 'report' %}" method="GET">
+                                <div class="row">
+                                    {% if request.user.is_superuser  %}
+                                    <div class="col">
+                                        <label>Created By</label>
+                                        <select class="form-control" name='created_by'>
+                                            <option value="" {% if not created_by %} selected {% endif %}>All</option>
+                                            {% for admin in user_options %}
+                                                <option value="{{ admin }}" {% if created_by == admin %} selected {% endif %}>{{ admin }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col">
+                                        <label>Assigned To</label>
+                                        <select class="form-control" name='assigned_to'>
+                                            <option value="" {% if not assigned_to %} selected {% endif %}>All</option>
+                                            {% for admin in assigned_to_options %}
+                                                <option value="{{ admin }}" {% if assigned_to == admin %} selected {% endif %}>{{ admin }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    {% endif %}
+                                    <div class="col">
+                                        <label>Ticket ID</label>
+                                        <input type="text" class="form-control" placeholder="Ticket ID" name='ticket_number' {% if ticket_number %} value="{{ticket_number}}" {% endif %}>
+                                    </div>
+                                    <div class="col">
+                                        <label>ID Number</label>
+                                        <input type="text" class="form-control" placeholder="ID Number" name='id_number' {% if id_number %} value="{{id_number}}" {% endif %}>
+                                    </div>
+                                    <div class="col">
+                                        <label>Date Range</label>
+                                        <div class="input-group">
+                                            <input type="date" class="form-control" name="date_from" placeholder="From" {% if date_from %} value="{{ date_from }}" {% endif %}>
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">to</span>
+                                            </div>
+                                            <input type="date" class="form-control" name="date_to" placeholder="To" {% if date_to %} value="{{ date_to }}" {% endif %}>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col">
+                                        <label>Status</label>
+                                        <select class="form-control" name='status'>
+                                            <option value="" {% if not status %} selected {% endif %}>All</option>
+                                            {% for ticket_status in status_options %}
+                                                <option value="{{ ticket_status }}" {% if status == ticket_status %} selected {% endif %}>{{ ticket_status }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="col">
+                                        <label>Mode</label>
+                                        <select class="form-control" name='mode'>
+                                            <option value="" {% if not mode %} selected {% endif %}>All</option>
+                                            {% for mode_types in mode_options %}
+                                                <option value="{{ mode_types }}" {% if mode == mode_types  %} selected {% endif %}>{{ mode_types }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="col" style="padding-top: 2%;">
+                                        <button type="submit" class="btn btn-primary">Search</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <hr>
+        
+            <h3 style="text-align: center;">Report</h3>
+        <hr>
+        {% if request.user.is_superuser  %}
+        <div class="col-12">
+            <div style="max-height: 70vh; overflow-y: auto;">
+                <table class="table table-bordered">
+                    <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">Ticket ID</th>
+                        <th scope="col">Created By</th>
+                        <th scope="col">Assigned To</th>
+                        <th scope="col">ID Number</th>
+                        <th scope="col">Client Type</th>
+                        <th scope="col">Category</th>
+                        <th scope="col">Date Created</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Mode</th>
+                    </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        {% for ticket in ticket_list %}
+                        <tr>
+                            <td scope="col">{{ticket.ticket_number}}</td>
+                            <td scope="col">{{ticket.user|title}}</td>
+                            <td scope="col">{{ticket.assigned_to|title}}</td>
+                            <td scope="col">{{ticket.id_number}}</td>
+                            <td scope="col">{{ticket.client_type|title}}</td>
+                            <td scope="col">{{ticket.category|title}}</td>
+                            <td scope="col">{{ticket.created_at}}</td>
+                            <td scope="col" >{{ticket.status|title}}</td>
+                            <td scope="col">{{ticket.mode|title}}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div style="max-height: 70vh; overflow-y: auto;">
+                <table class="table table-bordered">
+                    <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">Ticket ID</th>
+                        <th scope="col">Created By</th>
+                        <th scope="col">Assigned To</th>
+                        <th scope="col">ID Number</th>
+                        <th scope="col">Client Type</th>
+                        <th scope="col">Category</th>
+                        <th scope="col">Date Created</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Mode</th>
+                    </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        {% for ticket in tickets2 %}
+                        <tr>
+                            <td scope="col">{{ticket.ticket_number}}</td>
+                            <td scope="col">{{ticket.user|title}}</td>
+                            <td scope="col">{{ticket.assigned_to|title}}</td>
+                            <td scope="col">{{ticket.id_number}}</td>
+                            <td scope="col">{{ticket.client_type|title}}</td>
+                            <td scope="col">{{ticket.category|title}}</td>
+                            <td scope="col">{{ticket.created_at}}</td>
+                            <td scope="col">{{ticket.status|title}}</td>
+                            <td scope="col">{{ticket.mode|title}}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+        {% endif %}
+                        
+                    </div>
+                </div>
+                
+            </div>
+            </main>
+
+
+    {% endblock %}
+    <footer class="footer">
+        <div class="container-fluid">
+            <div class="row text-muted">
+                <div class="col-6 text-start">
+                    <p class="mb-0">
+                        <a class="text-muted" href="https://helpdesk.knust.edu.gh/" target="_blank"><strong>USSD</strong></a> - <a class="text-muted" href="https://helpdesk.knust.edu.gh/" target="_blank"><strong>Ticketing System</strong></a>								&copy;
+                    </p>
+                </div>
+                
+            </div>
+        </div>
+    </footer>
+</div>
+</div>
+
+<script>
+feather.replace();
+</script>
+
+</body>
+
+</html>

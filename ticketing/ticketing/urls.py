@@ -23,6 +23,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path('',include('ticksys.urls')),
     path('', auth_views.LoginView.as_view(template_name='login.html'), name='user-login'),
-     path('signup/', user_views.signup, name='user-signup'),
+    path('signup/', user_views.signup, name='user-signup'),
+    path('report', user_views.report, name='report'),
     
 ]

@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import *
 from .forms import *
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.utils import timezone
@@ -8,7 +9,8 @@ from django.db.models.functions import TruncMonth, ExtractMonth, ExtractDay, Ext
 from django.db.models import Count
 from datetime import datetime
 from django.template.loader import render_to_string
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from django.views import generic
 from django.urls import reverse_lazy, reverse
 from django.db.models import Q, Sum
@@ -20,6 +22,12 @@ from bootstrap_modal_forms.generic import (
 from django.views.generic.edit import CreateView
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from reportlab.lib.styles import getSampleStyleSheet
+from openpyxl import Workbook
+from openpyxl.styles import *
+from openpyxl.utils import get_column_letter
+from openpyxl.styles import PatternFill, Font, Alignment
+from reportlab.lib import colors
 
 
 # Create your views here.
@@ -284,154 +292,194 @@ def searchdata(request):
     }
     return render(request, 'ticketlogs.html', context=context)
 
+def is_valid_queryparam(param):
+    return param != '' and param is not None
+
 def report(request):
-    orders = Ticket.objects.annotate(
-        month_year=TruncMonth('date')
-    ).values('month_year').annotate(
-        count=Count('id')
-    ).order_by('-month_year')
+    user = request.user
+
+    if request.user.is_superuser:
+        tickets = Ticket.objects.annotate(
+            month_year=TruncMonth('created_at')
+        ).values('month_year').annotate(
+            count=Count('id')
+        ).order_by('-month_year')
+    else:
+        tickets = Ticket.objects.filter(Q(user=user) | Q(assigned_to=user.username)).annotate(
+            month_year=TruncMonth('created_at')
+        ).values('month_year').annotate(
+            count=Count('id')
+        ).order_by('-month_year')
+
     status_options = Ticket.objects.values_list('status', flat=True).distinct()
     # pending_orders = Ticket.objects.filter( status='pending').count()
-    available_months = [(order['month_year'].strftime('%B %Y'), order['month_year'].strftime('%Y-%m-01'), order['month_year'].strftime('%Y-%m-31')) for order in orders]
+    available_months = [(ticket['month_year'].strftime('%B %Y'), ticket['month_year'].strftime('%Y-%m-01'), ticket['month_year'].strftime('%Y-%m-31')) for ticket in tickets]
+    mode_options = Ticket.objects.values_list('mode', flat=True).distinct()
+    tl = Ticket.objects.order_by('-id')
+    tickets1 = Ticket.objects.all()
+    tickets2 = Ticket.objects.filter(Q(user=user) | Q(assigned_to=user.username)).order_by('-id')
 
-    ol = Ticket.objects.order_by('-id')
-    orders1 = Ticket.objects.all()
+    user_set = set()
+    assigned_to_set = set()
 
-    released_by_set = set()
-    received_by_set = set()
-
-    for order in orders1:
-        if order.released_by:
-            released_by_set.add(order.released_by)
-        if order.returned_to:
-            received_by_set.add(order.returned_to)
+    for ticket in tickets1:
+        if ticket.user:
+            user_set.add(ticket.user)
+        if ticket.assigned_to:
+            assigned_to_set.add(ticket.assigned_to)
     
-    order_id = request.GET.get('id')
-    name = request.GET.get('name')
-    issued_to = request.GET.get('issued_to')
-    itemName = request.GET.get('item_name')
-    quantity = request.GET.get('request_quantity')
+    ticket_id = request.GET.get('id')
+    ticket_number = request.GET.get('ticket_number')
+    created_by = request.GET.get('created_by')
+    id_number = request.GET.get('id_number')
+    status = request.GET.get('status')
+    mode = request.GET.get('mode')
     date_from = request.GET.get('date_from')
     date_to = request.GET.get('date_to')
-    status = request.GET.get('status')
-    released_by = request.GET.get('released_by')
-    received_by = request.GET.get('received_by')
+    assigned_to = request.GET.get('assigned_to')
 
-    request.session['id'] = order_id
-    request.session['name'] = name
-    request.session['issued_to'] = issued_to
-    request.session['item_name'] = itemName
+    request.session['id'] = ticket_id
+    request.session['ticket_number'] = ticket_number
+    request.session['created_by'] = created_by
+    request.session['id_number'] = id_number
     request.session['date_from'] = date_from
     request.session['date_to'] = date_to
     request.session['status'] = status
-    request.session['released_by'] = released_by
-    request.session['received_by'] = received_by
+    request.session['mode'] = mode
+    request.session['assigned_to'] = assigned_to
 
-    # Filter queryset based on search parameters
-    ol = ol.filter(
-        Q(date__range=[date_from, date_to]) if date_from and date_to else Q()
-    )
-    if is_valid_queryparam(order_id):
-        ol = ol.filter(id=order_id)
-    if is_valid_queryparam(name):
-        ol = ol.filter(users__username__icontains=name)
-    if is_valid_queryparam(issued_to):
-        ol = ol.filter(issued_to__icontains=issued_to)
-    if is_valid_queryparam(itemName):
-        ol = ol.filter(item_name__name__icontains=itemName)
-    if is_valid_queryparam(quantity):
-        ol = ol.filter(request_quantity=quantity)
-    if is_valid_queryparam(status):
-        ol = ol.filter(status=status)
-    if is_valid_queryparam(released_by):
-        ol = ol.filter(released_by__icontains=released_by)
-    if is_valid_queryparam(received_by):
-        ol = ol.filter(returned_to__icontains=received_by)
+    if request.user.is_superuser:
+        tl = tl.filter(
+            Q(created_at__range=[date_from, date_to]) if date_from and date_to else Q()
+        )
+        if is_valid_queryparam(ticket_id):
+            tl = tl.filter(id=ticket_id)
+        if is_valid_queryparam(ticket_number):
+            tl = tl.filter(ticket_number__icontains=ticket_number)
+        if is_valid_queryparam(created_by):
+            try:
+                user = User.objects.get(username=created_by)  # Retrieve the user by username
+                tl = tl.filter(Q(user=user))  # Filter by user object
+            except User.DoesNotExist:
+                tl = tl.none()
+        if is_valid_queryparam(id_number):
+            tl = tl.filter(id_number__icontains=id_number)
+        if is_valid_queryparam(status):
+            tl = tl.filter(status=status)
+        if is_valid_queryparam(mode):
+            tl = tl.filter(mode=mode)
+        if is_valid_queryparam(assigned_to):
+            tl = tl.filter(assigned_to__icontains=assigned_to)
 
-    page = request.GET.get('page', 1)
-    paginator = Paginator(ol, 30)
+        page = request.GET.get('page', 1)
+        paginator = Paginator(tl, 30)
 
-    try:
-        ol = paginator.page(page)
-    except PageNotAnInteger:
-        ol = paginator.page(1)
-    except EmptyPage:
-        ol = paginator.page(paginator.num_pages)
+        try:
+            tl = paginator.page(page)
+        except PageNotAnInteger:
+            tl = paginator.page(1)
+        except EmptyPage:
+            tl = paginator.page(paginator.num_pages)
+    else:
+        tickets2 = tickets2.filter(
+        Q(created_at__range=[date_from, date_to]) if date_from and date_to else Q()
+        )
+        if is_valid_queryparam(ticket_id):
+            tickets2 = tickets2.filter(id=ticket_id)
+        if is_valid_queryparam(ticket_number):
+            tickets2 = tickets2.filter(ticket_number__icontains=ticket_number)
+        if is_valid_queryparam(created_by):
+            try:
+                user = User.objects.get(username=created_by)  # Retrieve the user by username
+                tickets2 = tickets2.filter(Q(user=user))  # Filter by user object
+            except User.DoesNotExist:
+                tickets2 = tickets2.none()
+        if is_valid_queryparam(id_number):
+            tickets2 = tickets2.filter(id_number__icontains=id_number)
+        if is_valid_queryparam(status):
+            tickets2 = tickets2.filter(status=status)
+        if is_valid_queryparam(mode):
+            tickets2 = tickets2.filter(mode=mode)
+        if is_valid_queryparam(assigned_to):
+            tickets2 = tickets2.filter(assigned_to__icontains=assigned_to)
+        page = request.GET.get('page', 1)
+        paginator = Paginator(tickets2, 30)
 
-    user = request.user
-    is_sub_admin = user.groups.filter(name='sub-admin').exists()
+        try:
+            tickets2 = paginator.page(page)
+        except PageNotAnInteger:
+            tickets2 = paginator.page(1)
+        except EmptyPage:
+            tickets2 = paginator.page(paginator.num_pages)
+
+    
 
     context = {
-        'orders1' : orders,
-        'order_list': ol,
-        'order_id' : order_id,
-        'name': name,
-        'issued_to' : issued_to,
-        'itemName': itemName,
-        'quantity': quantity,
+        'tickets1' : tickets,
+        'tickets2' : tickets2,
+        'ticket_list': tl,
+        'ticket_id' : ticket_id,
+        'created_by': created_by,
+        'assigned_to' : assigned_to,
+        'ticket_number': ticket_number,
+        'mode': mode,
         'date_from': date_from,
         'date_to': date_to,
         'status': status,
-        'released_by': released_by,
-        'received_by': received_by,
         'available_months': available_months,
-        'released_by_options': released_by_set,
-        'received_by_options': received_by_set,
+        'user_options': user_set,
+        'assigned_to_options': assigned_to_set,
         'status_options' : status_options,
-        'is_sub_admin' : is_sub_admin,
-        'pending_orders' : pending_orders,
+        'mode_options' : mode_options
     }
-    return render(request, 'dashboard/report.html', context)
+    return render(request, 'report.html', context)
 
 @login_required
-def order_excel(request):
-    ol = Order.objects.order_by('users')
+def ticket_excel(request):
+    tl = Ticket.objects.order_by('user')
 
-    order_id = request.session.get('id')
-    name = request.session.get('name')
-    issued_to = request.session.get('issued_to')
-    itemName = request.session.get('item_name')
+    ticket_number = request.session.get('ticket_number')
+    created_by = request.session.get('created_by')
+    mode = request.session.get('mode')
+    id_number = request.session.get('id_number')
     date_from = request.session.get('date_from')
     date_to = request.session.get('date_to')
     status = request.session.get('status')
-    released_by = request.session.get('released_by')
-    received_by = request.session.get('received_by')
+    assigned_to = request.session.get('assigned_to')
 
     # Apply filters to the queryset
-    ol = ol.filter(
+    tl = tl.filter(
         Q(date__range=[date_from, date_to]) if date_from and date_to else Q()
     )
-    if is_valid_queryparam(order_id):
-        ol = ol.filter(id=order_id)
-    if is_valid_queryparam(name):
-        ol = ol.filter(users__username__icontains=name)
-    if is_valid_queryparam(issued_to):
-        ol = ol.filter(issued_to__icontains=issued_to)
-    if is_valid_queryparam(itemName):
-        ol = ol.filter(item_name__name__icontains=itemName)
+    if is_valid_queryparam(ticket_number):
+        tl = tl.filter(ticket_number__icontains=ticket_number)
+    if is_valid_queryparam(created_by):
+        tl = tl.filter(user__contains=created_by)
+    if is_valid_queryparam(id_number):
+        ol = ol.filter(id_number__icontains=id_number)
     if is_valid_queryparam(status):
         ol = ol.filter(status=status)
-    if is_valid_queryparam(released_by):
-        ol = ol.filter(released_by__icontains=released_by)
-    if is_valid_queryparam(received_by):
-        ol = ol.filter(returned_to__icontains=received_by)
+    if is_valid_queryparam(mode):
+        ol = ol.filter(mode=mode)
+    if is_valid_queryparam(assigned_to):
+        ol = ol.filter(assigned_to__icontains=assigned_to)
 
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = f'attachment; filename="Request Report {date_from} to {date_to}.xlsx"'
+    response['Content-Disposition'] = f'attachment; filename="Ticket Report {date_from} to {date_to}.xlsx"'
     workbook = Workbook()
 
     worksheet = workbook.active
-    worksheet.merge_cells('A1:J1')
-    worksheet.merge_cells('A2:J2')
+    worksheet.merge_cells('A1:I1')
+    worksheet.merge_cells('A2:I2')
     first_cell = worksheet.cell(row=1, column=1)
-    first_cell.value = f"Report For Requests Generated on {timezone.now()}"
+    first_cell.value = f"Report For Tickets Generated on {timezone.now()}"
 
     first_cell.font = Font(bold=True)
     first_cell.alignment = Alignment(horizontal="center", vertical="center")
 
     worksheet.title = f'Request List {date_from} to {date_to}'
 
-    columns = ['Request ID', 'Issued By','Issued To', 'Item Name', 'Quantity', 'Date Created', 'Date Received', 'Status', 'Released By', 'Received By']
+    columns = ['Ticket ID', 'Created By','Assigned To', 'ID Number', 'Client Type','Category', 'Status', 'Date Created', 'Updated At' ]
     row_num = 3
 
     for col_num, column_title in enumerate(columns, 1):
@@ -443,12 +491,13 @@ def order_excel(request):
         column_letter = get_column_letter(col_num)
         worksheet.column_dimensions[column_letter].width = max(len(str(column_title)), 12)
 
-    for order in ol:
+    for ticket in tl:
         row_num += 1
-        row = [order.id , order.users.username, order.issued_to, order.item_name.name, order.request_quantity,
-               order.date.replace(tzinfo=None) if order.date else None,
-               order.returned_date.replace(tzinfo=None) if order.returned_date else None,
-               order.status, order.released_by, order.returned_to]
+        row = [ticket.ticket_number , ticket.user.username, ticket.assigned_to, ticket.id_number, ticket.client_type,
+               ticket.category, ticket.status,
+               ticket.created_at.replace(tzinfo=None) if ticket.created_at else None,
+               ticket.updated_at.replace(tzinfo=None) if ticket.updated_at else None,
+               ]
 
         for col_num, cell_value in enumerate(row, 1):
             cell = worksheet.cell(row=row_num, column=col_num)
@@ -474,74 +523,74 @@ def order_excel(request):
     return response
 
 
-@login_required
-def order_pdf(request):
-    ol = Order.objects.order_by('id')
+# @login_required
+# def order_pdf(request):
+#     ol = Order.objects.order_by('id')
 
-    # Retrieve filters from session
-    order_id = request.session.get('id')
-    name = request.session.get('name')
-    issued_to = request.session.get('issued_to')
-    itemName = request.session.get('item_name')
-    date_from = request.session.get('date_from')
-    date_to = request.session.get('date_to')
-    status = request.session.get('status')
-    released_by = request.session.get('released_by')
-    received_by = request.session.get('received_by')
+#     # Retrieve filters from session
+#     order_id = request.session.get('id')
+#     name = request.session.get('name')
+#     issued_to = request.session.get('issued_to')
+#     itemName = request.session.get('item_name')
+#     date_from = request.session.get('date_from')
+#     date_to = request.session.get('date_to')
+#     status = request.session.get('status')
+#     released_by = request.session.get('released_by')
+#     received_by = request.session.get('received_by')
 
-    # Apply filters to queryset
-    ol = ol.filter(
-        Q(date__range=[date_from, date_to]) if date_from and date_to else Q()
-    )
-    if is_valid_queryparam(order_id):
-        ol = ol.filter(id=order_id)
-    if is_valid_queryparam(name):
-        ol = ol.filter(users__username__icontains=name)
-    if is_valid_queryparam(issued_to):
-        ol = ol.filter(issued_to__icontains=issued_to)
-    if is_valid_queryparam(itemName):
-        ol = ol.filter(item_name__name__icontains=itemName)
-    if is_valid_queryparam(status):
-        ol = ol.filter(status=status)
-    if is_valid_queryparam(released_by):
-        ol = ol.filter(released_by__icontains=released_by)
-    if is_valid_queryparam(received_by):
-        ol = ol.filter(returned_to__icontains=received_by)
+#     # Apply filters to queryset
+#     ol = ol.filter(
+#         Q(date__range=[date_from, date_to]) if date_from and date_to else Q()
+#     )
+#     if is_valid_queryparam(order_id):
+#         ol = ol.filter(id=order_id)
+#     if is_valid_queryparam(name):
+#         ol = ol.filter(users__username__icontains=name)
+#     if is_valid_queryparam(issued_to):
+#         ol = ol.filter(issued_to__icontains=issued_to)
+#     if is_valid_queryparam(itemName):
+#         ol = ol.filter(item_name__name__icontains=itemName)
+#     if is_valid_queryparam(status):
+#         ol = ol.filter(status=status)
+#     if is_valid_queryparam(released_by):
+#         ol = ol.filter(released_by__icontains=released_by)
+#     if is_valid_queryparam(received_by):
+#         ol = ol.filter(returned_to__icontains=received_by)
 
-    # Create a PDF report
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="Inventory_Request_Report.pdf"'
+#     # Create a PDF report
+#     response = HttpResponse(content_type='application/pdf')
+#     response['Content-Disposition'] = 'attachment; filename="Inventory_Request_Report.pdf"'
 
-    data = []
-    header = ['Request ID', 'Issued By', 'Issued To', 'Item Name', 'Quantity', 'Date Created', 'Date Received', 'Status', 'Released By', 'Received By']
-    data.append(header)
-    for order in ol:
-        data.append([order.id, order.users.username, order.issued_to, order.item_name.name, order.request_quantity,
-                     order.date.replace(tzinfo=None) if order.date else None,
-                     order.returned_date.replace(tzinfo=None) if order.returned_date else None,
-                     order.status, order.released_by, order.returned_to])
+#     data = []
+#     header = ['Request ID', 'Issued By', 'Issued To', 'Item Name', 'Quantity', 'Date Created', 'Date Received', 'Status', 'Released By', 'Received By']
+#     data.append(header)
+#     for order in ol:
+#         data.append([order.id, order.users.username, order.issued_to, order.item_name.name, order.request_quantity,
+#                      order.date.replace(tzinfo=None) if order.date else None,
+#                      order.returned_date.replace(tzinfo=None) if order.returned_date else None,
+#                      order.status, order.released_by, order.returned_to])
 
-    total_count = len(ol)
+#     total_count = len(ol)
 
-    doc = SimpleDocTemplate(response, pagesize=landscape(letter), leftMargin=20, rightMargin=20, topMargin=20, bottomMargin=20)
+#     doc = SimpleDocTemplate(response, pagesize=landscape(letter), leftMargin=20, rightMargin=20, topMargin=20, bottomMargin=20)
     
-    table_style = TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-    ])
+#     table_style = TableStyle([
+#         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+#         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+#         ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+#         ('FONTSIZE', (0, 0), (-1, -1), 10),
+#         ('GRID', (0, 0), (-1, -1), 1, colors.black),
+#     ])
 
-    table = Table(data, style=table_style)
-    styles = getSampleStyleSheet()
+#     table = Table(data, style=table_style)
+#     styles = getSampleStyleSheet()
     
-    elements = []
-    elements.append(Paragraph(f"A Report of Requests Generated on {timezone.now()}", styles['title']))
-    elements.append(Paragraph(f"Filters used:", styles['title']))
-    elements.append(Paragraph(f"Request ID: {order_id if order_id else 'All'}, Name: {name if name else 'All'}, Item Name: {itemName if itemName else 'All'}, Date From: {date_from if date_from else 'All'}, Date To: {date_to if date_to else 'All'}, Status: {status if status else 'All'}, Released By: {released_by if released_by else 'All'}, Received By: {received_by if received_by else 'All'}", styles['Normal']))
-    elements.append(table)
-    elements.append(Paragraph(f"Total Count of Requests: {total_count}", styles['Normal']))
+#     elements = []
+#     elements.append(Paragraph(f"A Report of Requests Generated on {timezone.now()}", styles['title']))
+#     elements.append(Paragraph(f"Filters used:", styles['title']))
+#     elements.append(Paragraph(f"Request ID: {order_id if order_id else 'All'}, Name: {name if name else 'All'}, Item Name: {itemName if itemName else 'All'}, Date From: {date_from if date_from else 'All'}, Date To: {date_to if date_to else 'All'}, Status: {status if status else 'All'}, Released By: {released_by if released_by else 'All'}, Received By: {received_by if received_by else 'All'}", styles['Normal']))
+#     elements.append(table)
+#     elements.append(Paragraph(f"Total Count of Requests: {total_count}", styles['Normal']))
     
-    doc.build(elements)
-    return response
+#     doc.build(elements)
+#     return response

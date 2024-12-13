@@ -47,12 +47,12 @@
                                             <tr>
                                                 <td>#{{ticket.ticket_number}}</td>
                                                 <td>{{ticket.created_at}}</td>
-                                                <td>{{ticket.client_type}}</td>
+                                                <td>{{ticket.client_type|title}}</td>
                                                 <td class="d-none d-xl-table-cell">{{ticket.id_number}}</td>
                                                 <td class="d-none d-xl-table-cell">{{ticket.category}}</td>
                                                 <td><span class="badge {% if ticket.status == 'Done' %}bg-success {% elif ticket.status == 'In Progress' %}bg-warning{% else %}bg-danger{% endif %}">{{ticket.status}}</span></td>
-                                                <td class="d-none d-md-table-cell">{{ticket.user.username}}</td>
-                                                <td class="d-none d-md-table-cell">{{ticket.assigned_to}}</td>
+                                                <td class="d-none d-md-table-cell">{{ticket.user.username|title}}</td>
+                                                <td class="d-none d-md-table-cell">{{ticket.assigned_to|title}}</td>
                                                 <td><button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#infoModal{{ ticket.id }}" data-bs-placement="top" data-bs-toggle="tooltip1" title="View More Information">
                                                     More
                                                 </button>
@@ -67,8 +67,8 @@
                                                             </div>
                                                             <div class="modal-body">
                                                                 <p><b>ID Number</b>: {{ ticket.id_number|title }}</p>
-                                                                <p><b>Client Type</b>: {{ ticket.client_type }}</p>
-                                                                <p><b>Description</b>: {{ ticket.description }}</p>
+                                                                <p><b>Client Type</b>: {{ ticket.client_type|title }}</p>
+                                                                <p><b>Description</b>: {{ ticket.description|title }}</p>
                                                 
                                                                 <form method="post" action="{% url 'update_ticket_status' ticket.id %}">
                                                                     {% csrf_token %}
@@ -83,7 +83,7 @@
                                                                     <select id="assigned_user" name="assigned_user" class="form-control">
                                                                         {% for user in all_users %}
                                                                             <option value="{{ user.username }}" {% if ticket.assigned_to == user.username %}selected{% endif %}>
-                                                                                {{ user.username }}
+                                                                                {{ user.username|title }}
                                                                             </option>
                                                                         {% endfor %}
                                                                     </select>
