@@ -133,13 +133,13 @@ def index(request):
     user = request.user
     form = TicketForm()
     tickets = Ticket.objects.all()
-    tickets_by_user = Ticket.objects.filter(user=user).count()
+    tickets_by_user = Ticket.objects.filter(Q(user=user) | Q(assigned_to=user.username)).count()
     recent_tickets = Ticket.objects.filter(user=user).order_by('-created_at')[:10]
 
     current_year = timezone.now().year
     tickets_by_month = Ticket.objects.filter(created_at__year=current_year).annotate(
         month=TruncMonth('created_at')
-    ).values('month').annotate(count=Count('ticket_number')).order_by('month')
+    ).values('month').annotate(count=Count('ticket_number')).order_by('month').filter(Q(user=user) | Q(assigned_to=user.username))
 
     months = [datetime(2000, i + 1, 1).strftime('%b') for i in range(12)]
     ticket_counts = [0] * 12
@@ -150,7 +150,7 @@ def index(request):
 
     today = timezone.now().date()
     # assigned_to_today = Ticket.objects.filter( user=user, updated_at__date=today).count()
-    user_tickets_today = Ticket.objects.filter(user=user, created_at__date=today, updated_at__date=today).count()
+    user_tickets_today = Ticket.objects.filter(Q(user=user) | Q(assigned_to=user.username), created_at__date=today, updated_at__date=today ).count()
     
     assigned_to = Ticket.objects.filter( user=user, status='Assigned' or 'In Progress').count()
     total_resolved = Ticket.objects.filter(user=user, status='Done').count()
@@ -234,29 +234,37 @@ def update_ticket_status(request, ticket_id):
         # Fetch the ticket
         ticket = get_object_or_404(Ticket, id=ticket_id)
 
-        
+        # Get new values from the form
         new_status = request.POST.get('status')
         assigned_user_username = request.POST.get('assigned_user')
 
         # Track changes
         status_changed = new_status and new_status != ticket.status
-        user_changed = assigned_user_username and ticket.assigned_to != assigned_user_username
+        user_changed = (assigned_user_username != ticket.assigned_to) if assigned_user_username else ticket.assigned_to is not None
 
+        # Handle user assignment (clear or update)
         if user_changed:
-            assigned_user = get_object_or_404(User, username=assigned_user_username)
-            ticket.assigned_to = assigned_user_username 
-            ticket.status = 'Assigned'  
-            messages.success(request, f'Ticket #{ticket.ticket_number} has been assigned to {assigned_user_username}')
+            if assigned_user_username:  # If a user is selected
+                assigned_user = get_object_or_404(User, username=assigned_user_username)
+                ticket.assigned_to = assigned_user_username
+                ticket.status = 'Assigned'  # Optionally set status to 'Assigned'
+                messages.success(request, f'Ticket #{ticket.ticket_number} has been assigned to {assigned_user_username}')
+            else:  # If "None" is selected, clear the assigned user
+                ticket.assigned_to = None
+                messages.success(request, f'Ticket #{ticket.ticket_number} has been unassigned')
 
+        # Handle status update
         if status_changed:
             previous_status = ticket.status
             ticket.status = new_status
             messages.success(request, f'Ticket #{ticket.ticket_number} status changed from {previous_status} to {new_status}')
-        ticket.save()
 
+        # Save changes
+        ticket.save()
         return redirect('ticketlogs')
 
     return HttpResponseRedirect('/')
+
 
 
 

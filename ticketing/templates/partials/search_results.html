@@ -16,7 +16,7 @@
         {% for ticket in tickets %}
         <tr>
             <td>#{{ ticket.ticket_number }}</td>
-            <td>{{ ticket.ticket_number }}</td>
+            <td>{{ ticket.created_at }}</td>
             <td class="d-none d-xl-table-cell">{{ ticket.id_number }}</td>
             <td class="d-none d-xl-table-cell">{{ ticket.category }}</td>
             <td>

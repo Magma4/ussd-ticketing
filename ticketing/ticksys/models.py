@@ -17,12 +17,14 @@ class Ticket(models.Model):
     CLIENT_TYPE = [
         ('Staff', 'Staff'),
         ('Student', 'Student'),
+        ('Other', 'Other')
     ]
     
     MODE_CHOICES = [
         ('Walk-In', 'Walk-In'),
         ('Phone', 'Phone'),
         ('Email', 'Email'),
+        ('Other', 'Other')
     ]
 
     CATEGORY = [
