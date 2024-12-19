@@ -135,6 +135,7 @@ def index(request):
     tickets = Ticket.objects.all()
     tickets_by_user = Ticket.objects.filter(Q(user=user) | Q(assigned_to=user.username)).count()
     recent_tickets = Ticket.objects.filter(user=user).order_by('-created_at')[:10]
+    overall_recent_tickets = Ticket.objects.all().order_by('-created_at')[:10]
 
     current_year = timezone.now().year
     tickets_by_month = Ticket.objects.filter(created_at__year=current_year).annotate(
@@ -148,13 +149,34 @@ def index(request):
         month_index = order['month'].month - 1
         ticket_counts[month_index] = order['count']
 
+    overall_tickets_by_month = Ticket.objects.filter(created_at__year=current_year).annotate(
+            month=TruncMonth('created_at')
+        ).values('month').annotate(count=Count('ticket_number')).order_by('month').all()
+
+    months = [datetime(2000, i + 1, 1).strftime('%b') for i in range(12)]
+    overall_ticket_counts = [0] * 12
+
+    for order in overall_tickets_by_month:
+        month_index = order['month'].month - 1
+        overall_ticket_counts[month_index] = order['count']
+
+    overall_total_tickets = Ticket.objects.all().count()
+    overall_resolved_tickets = Ticket.objects.all().count()
+    overall_assigned_tickets = Ticket.objects.filter(status='Assigned').count()
+
     today = timezone.now().date()
     # assigned_to_today = Ticket.objects.filter( user=user, updated_at__date=today).count()
     user_tickets_today = Ticket.objects.filter(Q(user=user) | Q(assigned_to=user.username), created_at__date=today, updated_at__date=today ).count()
-    
+    overall_tickets_today = Ticket.objects.filter(created_at__date=today).count()
     assigned_to = Ticket.objects.filter( user=user, status='Assigned' or 'In Progress').count()
     total_resolved = Ticket.objects.filter(user=user, status='Done').count()
+
     context = {
+        'overall_recent_tickets' : overall_recent_tickets,
+        'overall_assigned_tickets' : overall_assigned_tickets,
+        'overall_total_tickets' : overall_total_tickets,
+        'overall_resolved_tickets' : overall_resolved_tickets,
+        'overall_tickets_today' : overall_tickets_today,
         'user' : user,
         'form' : form,
         'tickets' : tickets,
@@ -164,6 +186,7 @@ def index(request):
         'total_resolved' : total_resolved,
         'months' : months,
         'ticket_counts' : ticket_counts,
+        'overall_ticket_counts' : overall_ticket_counts,
         'recent_tickets' : recent_tickets
 
     }
@@ -179,10 +202,19 @@ def ticketlogs(request):
         Q(user=user) | Q(assigned_to=user.username) 
     ).order_by('-id')
     
-    
     paginator = Paginator(tickets, 15)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+
+    overall_tickets = Ticket.objects.annotate(
+        month=ExtractMonth('created_at'), 
+        day=ExtractDay('created_at'), 
+        year=ExtractYear('created_at')
+    ).order_by('-id')
+
+    paginator = Paginator(overall_tickets, 15)
+    page_number2 = request.GET.get('page')
+    page_obj2 = paginator.get_page(page_number2)
     
     all_users = User.objects.all()
 
@@ -190,6 +222,7 @@ def ticketlogs(request):
         'tickets': tickets,
         'all_users': all_users,
         'page_obj': page_obj,
+        'page_obj2' : page_obj2
     }
 
     return render(request, 'ticketlogs.html', context)
@@ -501,7 +534,7 @@ def ticket_excel(request):
 
     for ticket in tl:
         row_num += 1
-        row = [ticket.ticket_number , ticket.user.username, ticket.assigned_to, ticket.id_number, ticket.client_type,
+        row = [ticket.ticket_number , ticket.user, ticket.assigned_to, ticket.id_number, ticket.client_type,
                ticket.category, ticket.status,
                ticket.created_at.replace(tzinfo=None) if ticket.created_at else None,
                ticket.updated_at.replace(tzinfo=None) if ticket.updated_at else None,

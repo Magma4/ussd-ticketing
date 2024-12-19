@@ -10,4 +10,5 @@ urlpatterns = [
     path('create_ticket/', views.TicketCreateView.as_view(), name='create_ticket'),
     path('update_ticket/<int:ticket_id>/', views.update_ticket_status, name='update_ticket_status'),
     path('searchdata', views.searchdata, name='searchdata'),
+    path('ticket_excel', views.ticket_excel, name='ticket_excel'),
 ]
