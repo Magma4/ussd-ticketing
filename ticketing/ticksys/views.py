@@ -19,7 +19,7 @@ from bootstrap_modal_forms.generic import (
   BSModalUpdateView,
   BSModalDeleteView
 )
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from reportlab.lib.styles import getSampleStyleSheet
@@ -42,7 +42,7 @@ class TicketCreateView(CreateView):
     form_class = TicketForm
     template_name = 'ticket_form_modal.html'
     success_url = reverse_lazy('index')
-    success_message = 'Ticket created.'
+    success_message = 'Ticket created succesfully.'
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -56,6 +56,29 @@ class TicketCreateView(CreateView):
         messages.success(self.request, "Ticket created")
         return super().form_valid(form)
 
+class TicketUpdateView(UpdateView):
+    model = Ticket
+    form_class = TicketForm
+    template_name = 'ticket_form_modal.html'  # Reuse the same template for consistency
+    success_url = reverse_lazy('index')  # Redirect to the index page after successful update
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['request'] = self.request  # Pass request to the form
+        return kwargs
+
+    def form_valid(self, form):
+        messages.success(self.request, "Ticket updated successfully.")
+        return super().form_valid(form)
+
+class TicketDeleteView(DeleteView):
+    model = Ticket
+    template_name = 'ticket_confirm_delete.html'  # Template for confirmation
+    success_url = reverse_lazy('index')  # Redirect to the index page after successful deletion
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(self.request, "Ticket deleted successfully.")
+        return super().delete(request, *args, **kwargs)
 # Update
 # class TicketUpdateView(BSModalUpdateView):
 #     model = Ticket
@@ -94,8 +117,8 @@ class TicketCreateView(CreateView):
 #     model = Order
 #     template_name = 'dashboard/order_delete.html'
 #     success_message = 'Request was deleted.'
-    
-    
+
+
 #     def get_success_url(self):
 #         # Check if the user is a superuser
 #         if self.request.user.is_superuser:
@@ -119,8 +142,8 @@ def signup(request):
             if new_user is not None:
                 login(request, new_user)
                 return redirect('user-login')
-            
-            
+
+
     else:
         form = Register()
 
@@ -195,27 +218,27 @@ def index(request):
 def ticketlogs(request):
     user = request.user
     tickets = Ticket.objects.annotate(
-        month=ExtractMonth('created_at'), 
-        day=ExtractDay('created_at'), 
+        month=ExtractMonth('created_at'),
+        day=ExtractDay('created_at'),
         year=ExtractYear('created_at')
     ).filter(
-        Q(user=user) | Q(assigned_to=user.username) 
+        Q(user=user) | Q(assigned_to=user.username)
     ).order_by('-id')
-    
+
     paginator = Paginator(tickets, 15)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
     overall_tickets = Ticket.objects.annotate(
-        month=ExtractMonth('created_at'), 
-        day=ExtractDay('created_at'), 
+        month=ExtractMonth('created_at'),
+        day=ExtractDay('created_at'),
         year=ExtractYear('created_at')
     ).order_by('-id')
 
     paginator = Paginator(overall_tickets, 15)
     page_number2 = request.GET.get('page')
     page_obj2 = paginator.get_page(page_number2)
-    
+
     all_users = User.objects.all()
 
     context = {
@@ -304,14 +327,14 @@ def update_ticket_status(request, ticket_id):
 
 def searchdata(request):
     user = request.user
-    q = request.GET.get('query')  
+    q = request.GET.get('query')
 
     if q:
         try:
             tickets_by_user = Ticket.objects.filter(user=user)
             tickets = tickets_by_user.filter(
                 Q(ticket_number__icontains=q) |
-                Q(id_number__icontains=q)   
+                Q(id_number__icontains=q)
             )
         except ValueError:
             tickets_by_user = Ticket.objects.filter(user=user)
@@ -323,13 +346,13 @@ def searchdata(request):
         tickets = tickets_by_user.all()
         messages.error(request, "No results found")
 
-    paginator = Paginator(tickets, 10) 
+    paginator = Paginator(tickets, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
     context = {
         'page_obj': page_obj,
-        'query': q, 
+        'query': q,
     }
     return render(request, 'ticketlogs.html', context=context)
 
@@ -368,7 +391,7 @@ def report(request):
             user_set.add(ticket.user)
         if ticket.assigned_to:
             assigned_to_set.add(ticket.assigned_to)
-    
+
     ticket_id = request.GET.get('id')
     ticket_number = request.GET.get('ticket_number')
     created_by = request.GET.get('created_by')
@@ -453,7 +476,7 @@ def report(request):
         except EmptyPage:
             tickets2 = paginator.page(paginator.num_pages)
 
-    
+
 
     context = {
         'tickets1' : tickets,
@@ -528,7 +551,7 @@ def ticket_excel(request):
         cell.value = column_title
         cell.font = Font(bold=True)
         cell.alignment = Alignment(horizontal="center", vertical="center")
-        
+
         column_letter = get_column_letter(col_num)
         worksheet.column_dimensions[column_letter].width = max(len(str(column_title)), 12)
 
@@ -554,7 +577,7 @@ def ticket_excel(request):
     total_count_cell.value = "Total Count"
     total_count_cell.font = Font(bold=True)
     total_count_cell.alignment = Alignment(horizontal="center", vertical="center")
-    
+
     total_count_value_cell = worksheet.cell(row=row_num + 1, column=2)
     total_count_value_cell.value = len(ol)
     total_count_value_cell.font = Font(bold=True)
@@ -614,7 +637,7 @@ def ticket_excel(request):
 #     total_count = len(ol)
 
 #     doc = SimpleDocTemplate(response, pagesize=landscape(letter), leftMargin=20, rightMargin=20, topMargin=20, bottomMargin=20)
-    
+
 #     table_style = TableStyle([
 #         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
 #         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -625,13 +648,13 @@ def ticket_excel(request):
 
 #     table = Table(data, style=table_style)
 #     styles = getSampleStyleSheet()
-    
+
 #     elements = []
 #     elements.append(Paragraph(f"A Report of Requests Generated on {timezone.now()}", styles['title']))
 #     elements.append(Paragraph(f"Filters used:", styles['title']))
 #     elements.append(Paragraph(f"Request ID: {order_id if order_id else 'All'}, Name: {name if name else 'All'}, Item Name: {itemName if itemName else 'All'}, Date From: {date_from if date_from else 'All'}, Date To: {date_to if date_to else 'All'}, Status: {status if status else 'All'}, Released By: {released_by if released_by else 'All'}, Received By: {received_by if received_by else 'All'}", styles['Normal']))
 #     elements.append(table)
 #     elements.append(Paragraph(f"Total Count of Requests: {total_count}", styles['Normal']))
-    
+
 #     doc.build(elements)
 #     return response
