@@ -9,7 +9,7 @@
                             <div class="card flex-fill">
                                 <div class="card-header d-flex justify-content-between align-items-center">
                                     <h5 class="card-title mb-0">Ticket Logs</h5>
-        
+
                                     <!-- Search Bar -->
                                     <form class="row g-2" role="search" action="{% url 'searchdata' %}" method="GET">
                                         <div class="col-auto">
@@ -20,7 +20,7 @@
                                         </div>
                                     </form>
                                 </div>
-        
+
                                 <!-- Table -->
                                 <table class="table table-hover my-0 w-100" id="ticketTable">
                                     <thead>
@@ -46,7 +46,7 @@
 
                                         {% if request.user.is_superuser  %}
                                             {% for ticket in page_obj2 %}
-                                                
+
                                                 <tr>
                                                     <td>#{{ticket.ticket_number}}</td>
                                                     <td>{{ticket.created_at}}</td>
@@ -56,11 +56,163 @@
                                                     <td><span class="badge {% if ticket.status == 'Done' %}bg-success {% elif ticket.status == 'In Progress' %}bg-warning{% else %}bg-danger{% endif %}">{{ticket.status}}</span></td>
                                                     <td class="d-none d-md-table-cell">{{ticket.user.username|title}}</td>
                                                     <td class="d-none d-md-table-cell">{{ticket.assigned_to|title}}</td>
-                                                    <td><button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#infoModal{{ ticket.id }}" data-bs-placement="top" data-bs-toggle="tooltip1" title="View More Information">
-                                                        More
-                                                    </button>
-                                                
-                                                    <!-- Modal -->
+                                                    <td>
+                                                        <!-- Action Buttons -->
+                                                        <div class="btn-group" role="group">
+                                                            <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#infoModal{{ ticket.id }}" style="margin-right: 5px;">
+                                                                More
+                                                            </button>
+                                                            <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editModal{{ ticket.id }}" style="margin-right: 5px;">
+                                                                Edit
+                                                            </button>
+                                                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ ticket.id }}">
+                                                                Delete
+                                                            </button>
+                                                        </div>
+
+                                                        <!-- Info Modal -->
+                                                        <div class="modal fade" id="infoModal{{ ticket.id }}" tabindex="-1" aria-labelledby="infoModalLabel{{ ticket.id }}" aria-hidden="true">
+                                                            <div class="modal-dialog modal-dialog-centered">
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header">
+                                                                        <h1 class="modal-title fs-5" id="infoModalLabel{{ ticket.id }}">More Information</h1>
+                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                    </div>
+                                                                    <div class="modal-body">
+                                                                        <p><b>ID Number</b>: {{ ticket.id_number|title }}</p>
+                                                                        <p><b>Client Type</b>: {{ ticket.client_type|title }}</p>
+                                                                        <p><b>Category</b>: {{ticket.category}}</p>
+                                                                        <p><b>Description</b>: {{ ticket.description|title }}</p>
+
+                                                                            <form method="post" action="{% url 'update_ticket_status' pk=ticket.id %}">
+                                                                            {% csrf_token %}
+                                                                            <label for="status">Status:</label>
+                                                                            <select id="status" name="status" class="form-control">
+                                                                                <option value="In Progress" {% if ticket.status == "In Progress" %}selected{% endif %}>In Progress</option>
+                                                                                <option value="Done" {% if ticket.status == "Done" %}selected{% endif %}>Done</option>
+                                                                                <option value="Assigned" {% if ticket.status == "Assigned" %}selected{% endif %}>Assigned</option>
+                                                                            </select>
+
+                                                                            <label for="assigned_user">Assign To:</label>
+                                                                            <select id="assigned_user" name="assigned_user" class="form-control">
+                                                                                <option value="" {% if not ticket.assigned_to %}selected{% endif %}>-- None --</option>
+                                                                                {% for user in all_users %}
+                                                                                    <option value="{{ user.username }}" {% if ticket.assigned_to == user.username %}selected{% endif %}>
+                                                                                        {{ user.username|title }}
+                                                                                    </option>
+                                                                                {% endfor %}
+                                                                            </select>
+
+
+                                                                            <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Save</button>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Edit Modal -->
+                                                        <div class="modal fade" id="editModal{{ ticket.id }}" tabindex="-1" aria-labelledby="editModalLabel{{ ticket.id }}" aria-hidden="true">
+                                                            <div class="modal-dialog modal-dialog-centered">
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header">
+                                                                        <h5 class="modal-title" id="editModalLabel{{ ticket.id }}">Edit Ticket #{{ ticket.ticket_number }}</h5>
+                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                    </div>
+                                                                    <div class="modal-body">
+                                                                        <form method="post" action="{% url 'edit_ticket' pk=ticket.id %}">
+                                                                            {% csrf_token %}
+                                                                            <div class="mb-3">
+                                                                                <label for="client_type{{ ticket.id }}" class="form-label">Client Type</label>
+                                                                                <select class="form-control" id="client_type{{ ticket.id }}" name="client_type">
+                                                                                    <option value="Staff" {% if ticket.client_type == "Staff" %}selected{% endif %}>Staff</option>
+                                                                                    <option value="Student" {% if ticket.client_type == "Student" %}selected{% endif %}>Student</option>
+                                                                                    <option value="Other" {% if ticket.client_type == "Other" %}selected{% endif %}>Other</option>
+                                                                                </select>
+                                                                            </div>
+                                                                            <div class="mb-3">
+                                                                                <label for="id_number{{ ticket.id }}" class="form-label">ID Number</label>
+                                                                                <input type="text" class="form-control" id="id_number{{ ticket.id }}" name="id_number" value="{{ ticket.id_number }}">
+                                                                            </div>
+                                                                            <div class="mb-3">
+                                                                                <label for="category{{ ticket.id }}" class="form-label">Category</label>
+                                                                                <select class="form-control" id="category{{ ticket.id }}" name="category">
+                                                                                    <option value="Credentials" {% if ticket.category == "Credentials" %}selected{% endif %}>Credentials</option>
+                                                                                    <option value="Fees & Payments" {% if ticket.category == "Fees & Payments" %}selected{% endif %}>Fees & Payments</option>
+                                                                                    <option value="VClass" {% if ticket.category == "VClass" %}selected{% endif %}>VClass</option>
+                                                                                    <option value="Transcript" {% if ticket.category == "Transcript" %}selected{% endif %}>Transcript</option>
+                                                                                    <option value="Admission" {% if ticket.category == "Admission" %}selected{% endif %}>Admission</option>
+                                                                                    <option value="Wi-Fi" {% if ticket.category == "Wi-Fi" %}selected{% endif %}>Wi-Fi</option>
+                                                                                    <option value="Other" {% if ticket.category == "Other" %}selected{% endif %}>Other</option>
+                                                                                </select>
+                                                                            </div>
+                                                                            <div class="mb-3">
+                                                                                <label for="description{{ ticket.id }}" class="form-label">Description</label>
+                                                                                <textarea class="form-control" id="description{{ ticket.id }}" name="description" rows="3">{{ ticket.description }}</textarea>
+                                                                            </div>
+                                                                            <div class="modal-footer">
+                                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                                                                            </div>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                        <!-- Delete Modal -->
+                                                        <div class="modal fade" id="deleteModal{{ ticket.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ ticket.id }}" aria-hidden="true">
+                                                            <div class="modal-dialog modal-dialog-centered">
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header">
+                                                                        <h5 class="modal-title" id="deleteModalLabel{{ ticket.id }}">Delete Ticket</h5>
+                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                    </div>
+                                                                    <div class="modal-body">
+                                                                        <p>Are you sure you want to delete ticket #{{ ticket.ticket_number }}?</p>
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <form method="post" action="{% url 'delete_ticket' pk=ticket.id %}">
+                                                                            {% csrf_token %}
+                                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            {% else %}
+                                            {% for ticket in page_obj %}
+
+                                            <tr>
+                                                <td>#{{ticket.ticket_number}}</td>
+                                                <td>{{ticket.created_at}}</td>
+                                                <td>{{ticket.client_type|title}}</td>
+                                                <td class="d-none d-xl-table-cell">{{ticket.id_number}}</td>
+                                                <td class="d-none d-xl-table-cell">{{ticket.category}}</td>
+                                                <td><span class="badge {% if ticket.status == 'Done' %}bg-success {% elif ticket.status == 'In Progress' %}bg-warning{% else %}bg-danger{% endif %}">{{ticket.status}}</span></td>
+                                                <td class="d-none d-md-table-cell">{{ticket.user.username|title}}</td>
+                                                <td class="d-none d-md-table-cell">{{ticket.assigned_to|title}}</td>
+                                                <td>
+                                                    <!-- Action Buttons -->
+                                                    <div class="btn-group" role="group">
+                                                        <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#infoModal{{ ticket.id }}">
+                                                            More
+                                                        </button>
+                                                        <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editModal{{ ticket.id }}">
+                                                            Edit
+                                                        </button>
+                                                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ ticket.id }}">
+                                                            Delete
+                                                        </button>
+                                                    </div>
+
+                                                    <!-- Info Modal -->
                                                     <div class="modal fade" id="infoModal{{ ticket.id }}" tabindex="-1" aria-labelledby="infoModalLabel{{ ticket.id }}" aria-hidden="true">
                                                         <div class="modal-dialog modal-dialog-centered">
                                                             <div class="modal-content">
@@ -73,7 +225,7 @@
                                                                     <p><b>Client Type</b>: {{ ticket.client_type|title }}</p>
                                                                     <p><b>Category</b>: {{ticket.category}}</p>
                                                                     <p><b>Description</b>: {{ ticket.description|title }}</p>
-                                                    
+
                                                                     <form method="post" action="{% url 'update_ticket_status' ticket.id %}">
                                                                         {% csrf_token %}
                                                                         <label for="status">Status:</label>
@@ -82,7 +234,7 @@
                                                                             <option value="Done" {% if ticket.status == "Done" %}selected{% endif %}>Done</option>
                                                                             <option value="Assigned" {% if ticket.status == "Assigned" %}selected{% endif %}>Assigned</option>
                                                                         </select>
-                                                                        
+
                                                                         <label for="assigned_user">Assign To:</label>
                                                                         <select id="assigned_user" name="assigned_user" class="form-control">
                                                                             <option value="" {% if not ticket.assigned_to %}selected{% endif %}>-- None --</option>
@@ -93,86 +245,94 @@
                                                                             {% endfor %}
                                                                         </select>
 
-                                                                    
+
                                                                         <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Save</button>
                                                                     </form>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    
-                                        
-                                                    
-                                                </tr>
-                                                {% endfor %}
-                                            {% else %}
-                                            {% for ticket in page_obj %}
-                                                
-                                            <tr>
-                                                <td>#{{ticket.ticket_number}}</td>
-                                                <td>{{ticket.created_at}}</td>
-                                                <td>{{ticket.client_type|title}}</td>
-                                                <td class="d-none d-xl-table-cell">{{ticket.id_number}}</td>
-                                                <td class="d-none d-xl-table-cell">{{ticket.category}}</td>
-                                                <td><span class="badge {% if ticket.status == 'Done' %}bg-success {% elif ticket.status == 'In Progress' %}bg-warning{% else %}bg-danger{% endif %}">{{ticket.status}}</span></td>
-                                                <td class="d-none d-md-table-cell">{{ticket.user.username|title}}</td>
-                                                <td class="d-none d-md-table-cell">{{ticket.assigned_to|title}}</td>
-                                                <td><button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#infoModal{{ ticket.id }}" data-bs-placement="top" data-bs-toggle="tooltip1" title="View More Information">
-                                                    More
-                                                </button>
-                                            
-                                                <!-- Modal -->
-                                                <div class="modal fade" id="infoModal{{ ticket.id }}" tabindex="-1" aria-labelledby="infoModalLabel{{ ticket.id }}" aria-hidden="true">
-                                                    <div class="modal-dialog modal-dialog-centered">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h1 class="modal-title fs-5" id="infoModalLabel{{ ticket.id }}">More Information</h1>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                <p><b>ID Number</b>: {{ ticket.id_number|title }}</p>
-                                                                <p><b>Client Type</b>: {{ ticket.client_type|title }}</p>
-                                                                <p><b>Category</b>: {{ticket.category}}</p>
-                                                                <p><b>Description</b>: {{ ticket.description|title }}</p>
-                                                
-                                                                <form method="post" action="{% url 'update_ticket_status' ticket.id %}">
-                                                                    {% csrf_token %}
-                                                                    <label for="status">Status:</label>
-                                                                    <select id="status" name="status" class="form-control">
-                                                                        <option value="In Progress" {% if ticket.status == "In Progress" %}selected{% endif %}>In Progress</option>
-                                                                        <option value="Done" {% if ticket.status == "Done" %}selected{% endif %}>Done</option>
-                                                                        <option value="Assigned" {% if ticket.status == "Assigned" %}selected{% endif %}>Assigned</option>
-                                                                    </select>
-                                                                    
-                                                                    <label for="assigned_user">Assign To:</label>
-                                                                    <select id="assigned_user" name="assigned_user" class="form-control">
-                                                                        <option value="" {% if not ticket.assigned_to %}selected{% endif %}>-- None --</option>
-                                                                        {% for user in all_users %}
-                                                                            <option value="{{ user.username }}" {% if ticket.assigned_to == user.username %}selected{% endif %}>
-                                                                                {{ user.username|title }}
-                                                                            </option>
-                                                                        {% endfor %}
-                                                                    </select>
 
-                                                                
-                                                                    <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Save</button>
-                                                                </form>
+                                                    <!-- Edit Modal -->
+                                                    <div class="modal fade" id="editModal{{ ticket.id }}" tabindex="-1" aria-labelledby="editModalLabel{{ ticket.id }}" aria-hidden="true">
+                                                        <div class="modal-dialog modal-dialog-centered">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title" id="editModalLabel{{ ticket.id }}">Edit Ticket #{{ ticket.ticket_number }}</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <form method="post" action="{% url 'edit_ticket' pk=ticket.id %}">
+                                                                        {% csrf_token %}
+                                                                        <div class="mb-3">
+                                                                            <label for="client_type{{ ticket.id }}" class="form-label">Client Type</label>
+                                                                            <select class="form-control" id="client_type{{ ticket.id }}" name="client_type">
+                                                                                <option value="Staff" {% if ticket.client_type == "Staff" %}selected{% endif %}>Staff</option>
+                                                                                <option value="Student" {% if ticket.client_type == "Student" %}selected{% endif %}>Student</option>
+                                                                                <option value="Other" {% if ticket.client_type == "Other" %}selected{% endif %}>Other</option>
+                                                                            </select>
+                                                                        </div>
+                                                                        <div class="mb-3">
+                                                                            <label for="id_number{{ ticket.id }}" class="form-label">ID Number</label>
+                                                                            <input type="text" class="form-control" id="id_number{{ ticket.id }}" name="id_number" value="{{ ticket.id_number }}">
+                                                                        </div>
+                                                                        <div class="mb-3">
+                                                                            <label for="category{{ ticket.id }}" class="form-label">Category</label>
+                                                                            <select class="form-control" id="category{{ ticket.id }}" name="category">
+                                                                                <option value="Credentials" {% if ticket.category == "Credentials" %}selected{% endif %}>Credentials</option>
+                                                                                <option value="Fees & Payments" {% if ticket.category == "Fees & Payments" %}selected{% endif %}>Fees & Payments</option>
+                                                                                <option value="VClass" {% if ticket.category == "VClass" %}selected{% endif %}>VClass</option>
+                                                                                <option value="Transcript" {% if ticket.category == "Transcript" %}selected{% endif %}>Transcript</option>
+                                                                                <option value="Admission" {% if ticket.category == "Admission" %}selected{% endif %}>Admission</option>
+                                                                                <option value="Wi-Fi" {% if ticket.category == "Wi-Fi" %}selected{% endif %}>Wi-Fi</option>
+                                                                                <option value="Other" {% if ticket.category == "Other" %}selected{% endif %}>Other</option>
+                                                                            </select>
+                                                                        </div>
+                                                                        <div class="mb-3">
+                                                                            <label for="description{{ ticket.id }}" class="form-label">Description</label>
+                                                                            <textarea class="form-control" id="description{{ ticket.id }}" name="description" rows="3">{{ ticket.description }}</textarea>
+                                                                        </div>
+                                                                        <div class="modal-footer">
+                                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                                                        </div>
+                                                                    </form>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                                
-                                    
-                                                
+
+                                                    <!-- Delete Modal -->
+                                                    <div class="modal fade" id="deleteModal{{ ticket.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ ticket.id }}" aria-hidden="true">
+                                                        <div class="modal-dialog modal-dialog-centered">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title" id="deleteModalLabel{{ ticket.id }}">Delete Ticket</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <p>Are you sure you want to delete ticket #{{ ticket.ticket_number }}?</p>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <form method="post" action="{% url 'delete_ticket' pk=ticket.id %}">
+                                                                        {% csrf_token %}
+                                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
                                             </tr>
                                             {% endfor %}
                                             {% endif %}
-                                       
+
                                     </tbody>
                                 </table>
                             </div>
-                            
-                            
+
+
                         </div>
                         <div class="pagination justify-content-center">
                             <nav aria-label="Page navigation">
@@ -214,8 +374,8 @@
                     </div>
                 </div>
             </main>
-            
-        
+
+
 
         {% endblock %}
 
@@ -227,7 +387,7 @@
 								<a class="text-muted" href="https://helpdesk.knust.edu.gh/" target="_blank"><strong>USSD</strong></a> - <a class="text-muted" href="https://helpdesk.knust.edu.gh/" target="_blank"><strong>Ticketing System</strong></a>								&copy;
 							</p>
 						</div>
-						
+
 					</div>
 				</div>
 			</footer>
@@ -243,6 +403,23 @@
         const assignUserGroup = document.getElementById('assignUserGroup');
         assignUserGroup.style.display = status === 'Assigned' ? 'block' : 'none';
     }
+</script>
+
+<!-- Bootstrap JS Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Optional: Add this script to check if modals are working -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Debug modal triggers
+    const modalButtons = document.querySelectorAll('[data-bs-toggle="modal"]');
+    modalButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const targetModal = this.getAttribute('data-bs-target');
+            console.log('Modal trigger clicked:', targetModal);
+        });
+    });
+});
 </script>
 
 </body>

@@ -285,10 +285,10 @@ def create_ticket(request):
 
 
 
-def update_ticket_status(request, ticket_id):
+def update_ticket_status(request, pk):
     if request.method == 'POST':
         # Fetch the ticket
-        ticket = get_object_or_404(Ticket, id=ticket_id)
+        ticket = get_object_or_404(Ticket, id=pk)
 
         # Get new values from the form
         new_status = request.POST.get('status')
@@ -658,3 +658,61 @@ def ticket_excel(request):
 
 #     doc.build(elements)
 #     return response
+
+@login_required
+def edit_ticket(request, pk):
+    ticket = get_object_or_404(Ticket, pk=pk)
+
+    # Check if the user has permission to edit the ticket
+    if not request.user.is_superuser and request.user != ticket.user:
+        messages.error(request, "You don't have permission to edit this ticket.")
+        return redirect('ticketlogs')
+
+    if request.method == 'POST':
+        # Get form data
+        client_type = request.POST.get('client_type')
+        id_number = request.POST.get('id_number')
+        category = request.POST.get('category')
+        description = request.POST.get('description')
+
+        # Validate the data
+        if not all([client_type, id_number, category, description]):
+            messages.error(request, 'All fields are required.')
+            return redirect('ticketlogs')
+
+        # Validate choices
+        if client_type not in [choice[0] for choice in Ticket.CLIENT_TYPE]:
+            messages.error(request, 'Invalid client type.')
+            return redirect('ticketlogs')
+
+        if category not in [choice[0] for choice in Ticket.CATEGORY]:
+            messages.error(request, 'Invalid category.')
+            return redirect('ticketlogs')
+
+        # Update ticket
+        ticket.client_type = client_type
+        ticket.id_number = id_number
+        ticket.category = category
+        ticket.description = description
+        ticket.save()
+
+        messages.success(request, f'Ticket #{ticket.ticket_number} has been updated successfully')
+        return redirect('ticketlogs')
+
+    return redirect('ticketlogs')
+
+@login_required
+def delete_ticket(request, pk):
+    ticket = get_object_or_404(Ticket, pk=pk)
+
+    # Check if the user has permission to delete the ticket
+    if not request.user.is_superuser and request.user != ticket.user:
+        messages.error(request, "You don't have permission to delete this ticket.")
+        return redirect('ticketlogs')
+
+    if request.method == 'POST':
+        ticket_number = ticket.ticket_number
+        ticket.delete()
+        messages.success(request, f'Ticket #{ticket_number} has been deleted successfully')
+
+    return redirect('ticketlogs')
