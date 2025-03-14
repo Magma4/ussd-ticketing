@@ -28,6 +28,8 @@ from openpyxl.styles import *
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import PatternFill, Font, Alignment
 from reportlab.lib import colors
+import json
+from django.core.serializers.json import DjangoJSONEncoder
 
 
 # Create your views here.
@@ -156,14 +158,15 @@ def index(request):
     user = request.user
     form = TicketForm()
     tickets = Ticket.objects.all()
+    today = datetime.now().date()
     tickets_by_user = Ticket.objects.filter(Q(user=user) | Q(assigned_to=user.username)).count()
     recent_tickets = Ticket.objects.filter(user=user).order_by('-created_at')[:10]
     overall_recent_tickets = Ticket.objects.all().order_by('-created_at')[:10]
-
     current_year = timezone.now().year
     tickets_by_month = Ticket.objects.filter(created_at__year=current_year).annotate(
         month=TruncMonth('created_at')
     ).values('month').annotate(count=Count('ticket_number')).order_by('month').filter(Q(user=user) | Q(assigned_to=user.username))
+
 
     months = [datetime(2000, i + 1, 1).strftime('%b') for i in range(12)]
     ticket_counts = [0] * 12
@@ -194,7 +197,34 @@ def index(request):
     assigned_to = Ticket.objects.filter( user=user, status='Assigned' or 'In Progress').count()
     total_resolved = Ticket.objects.filter(user=user, status='Done').count()
 
+    # Monthly counts (simplified)
+    monthly_counts = [0] * 12
+    monthly_data = tickets.annotate(
+        month=ExtractMonth('created_at')
+    ).values('month').annotate(
+        count=Count('id')
+    )
+    for item in monthly_data:
+        if item['month']:  # Check if month is not None
+            monthly_counts[item['month'] - 1] = item['count']
+
+
+
+
+    # Category data
+    category_data = tickets.values('category').annotate(count=Count('id'))
+    category_labels = [f"'{item['category']}'" for item in category_data]
+    category_counts = [item['count'] for item in category_data]
+
     context = {
+        'tickets': tickets,
+        'total_tickets': tickets.count(),
+        'today_tickets': tickets.filter(created_at__date=today).count(),
+        'assigned_tickets': tickets.filter(status='Assigned').count(),
+        'resolved_tickets': tickets.filter(status='Done').count(),
+        'monthly_counts': monthly_counts,  # This will be a list of 12 numbers
+        'category_labels': '[' + ','.join(category_labels) + ']',  # This will be a JSON array of strings
+        'category_counts': category_counts,
         'overall_recent_tickets' : overall_recent_tickets,
         'overall_assigned_tickets' : overall_assigned_tickets,
         'overall_total_tickets' : overall_total_tickets,
@@ -202,7 +232,6 @@ def index(request):
         'overall_tickets_today' : overall_tickets_today,
         'user' : user,
         'form' : form,
-        'tickets' : tickets,
         'tickets_by_user' : tickets_by_user,
         'user_tickets_today' : user_tickets_today,
         'assigned_to' : assigned_to,
@@ -210,9 +239,12 @@ def index(request):
         'months' : months,
         'ticket_counts' : ticket_counts,
         'overall_ticket_counts' : overall_ticket_counts,
-        'recent_tickets' : recent_tickets
-
+        'recent_tickets' : recent_tickets,  # This will be a list of numbers
+        'done_count': tickets.filter(status='Done').count(),
+        'in_progress_count': tickets.filter(status='In Progress').count(),
+        'assigned_count': tickets.filter(status='Assigned').count(),
     }
+
     return render(request, 'index.html', context)
 
 def ticketlogs(request):

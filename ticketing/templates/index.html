@@ -30,6 +30,13 @@
 	<link href="{% static 'css/app.css' %}" rel="stylesheet">
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 
+<!-- In the <head> section -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Add these in the head section -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
 </head>
 
@@ -73,10 +80,6 @@
         </a>
 
 				<ul class="sidebar-nav">
-					<li class="sidebar-header">
-						Pages
-					</li>
-
 					<li class="sidebar-item">
 						<a class="sidebar-link" href="{% url 'index' %}">
               <i class="align-middle" data-feather="sliders"></i> <span class="align-middle">Dashboard</span>
@@ -251,134 +254,182 @@
 					</div>
 
 
-					{% if request.user.is_superuser  %}
-					<!-- Dashboard Cards -->
+					{% if request.user.is_superuser %}
 					<div class="row">
-						<!-- Total Ticket -->
-						<div class="col-lg-3 col-md-6 col-sm-12">
-							<div class="card">
-								<div class="card-body">
-									<div class="row">
-										<div class="col mt-0">
-											<h5 class="card-title">Total Tickets</h5>
-										</div>
-										<div class="col-auto">
-											<div class="stat text-primary">
-												<i class="align-middle" data-feather="database"></i>
+						<!-- Summary Cards Row -->
+						<div class="col-12 col-lg-6">
+							<div class="row">
+								<!-- Total Tickets Card -->
+								<div class="col-sm-6 mb-3">
+									<div class="card">
+										<div class="card-body">
+											<div class="row">
+												<div class="col mt-0">
+													<h5 class="card-title">Total Tickets</h5>
+												</div>
+												<div class="col-auto">
+													<div class="stat text-primary">
+														<i class="align-middle" data-feather="database"></i>
+													</div>
+												</div>
+											</div>
+											<h1 class="mt-1 mb-3">{{overall_total_tickets}}</h1>
+											<div class="mb-0">
+												<span class="text-muted">All time tickets</span>
 											</div>
 										</div>
 									</div>
-									<h1 class="mt-1 mb-3">{{overall_total_tickets}}</h1>
+								</div>
+
+								<!-- Today's Tickets Card -->
+								<div class="col-sm-6 mb-3">
+									<div class="card">
+										<div class="card-body">
+											<div class="row">
+												<div class="col mt-0">
+													<h5 class="card-title">Today's Tickets</h5>
+												</div>
+												<div class="col-auto">
+													<div class="stat text-primary">
+														<i class="align-middle" data-feather="file-text"></i>
+													</div>
+												</div>
+											</div>
+											<h1 class="mt-1 mb-3">{{overall_tickets_today}}</h1>
+											<div class="mb-0">
+												<span class="text-muted">Tickets created today</span>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<!-- Assigned Tickets Card -->
+								<div class="col-sm-6 mb-3">
+									<div class="card">
+										<div class="card-body">
+											<div class="row">
+												<div class="col mt-0">
+													<h5 class="card-title">Assigned</h5>
+												</div>
+												<div class="col-auto">
+													<div class="stat text-primary">
+														<i class="align-middle" data-feather="users"></i>
+													</div>
+												</div>
+											</div>
+											<h1 class="mt-1 mb-3">{{overall_assigned_tickets}}</h1>
+											<div class="mb-0">
+												<span class="text-muted">Currently assigned tickets</span>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<!-- Resolved Tickets Card -->
+								<div class="col-sm-6 mb-3">
+									<div class="card">
+										<div class="card-body">
+											<div class="row">
+												<div class="col mt-0">
+													<h5 class="card-title">Resolved</h5>
+												</div>
+												<div class="col-auto">
+													<div class="stat text-primary">
+														<i class="align-middle" data-feather="check-circle"></i>
+													</div>
+												</div>
+											</div>
+											<h1 class="mt-1 mb-3">{{overall_resolved_tickets}}</h1>
+											<div class="mb-0">
+												<span class="text-muted">Total resolved tickets</span>
+											</div>
+										</div>
+									</div>
 								</div>
 							</div>
 						</div>
 
-						<!-- Tickets Today -->
-						<div class="col-lg-3 col-md-6 col-sm-12">
+						<!-- Status Distribution Chart -->
+						<div class="col-12 col-lg-6">
 							<div class="card">
-								<div class="card-body">
-									<div class="row">
-										<div class="col mt-0">
-											<h5 class="card-title">Tickets Today</h5>
-										</div>
-										<div class="col-auto">
-											<div class="stat text-primary">
-												<i class="align-middle" data-feather="file-text"></i>
-											</div>
-										</div>
-									</div>
-									<h1 class="mt-1 mb-3">{{overall_tickets_today}}</h1>
+								<div class="card-header">
+									<h5 class="card-title">Ticket Status Distribution</h5>
 								</div>
-							</div>
-						</div>
-
-						<!-- Total Assigned -->
-						<div class="col-lg-3 col-md-6 col-sm-12">
-							<div class="card">
 								<div class="card-body">
-									<div class="row">
-										<div class="col mt-0">
-											<h5 class="card-title">Total Assigned</h5>
-										</div>
-										<div class="col-auto">
-											<div class="stat text-primary">
-												<i class="align-middle" data-feather="users"></i>
-											</div>
-										</div>
+									<div style="position: relative; height: 300px;">
+										<canvas id="statusChart"></canvas>
 									</div>
-									<h1 class="mt-1 mb-3">{{overall_assigned_tickets}}</h1>
-								</div>
-							</div>
-						</div>
-
-						<!-- Total Resolved -->
-						<div class="col-lg-3 col-md-6 col-sm-12">
-							<div class="card">
-								<div class="card-body">
-									<div class="row">
-										<div class="col mt-0">
-											<h5 class="card-title">Total Resolved</h5>
-										</div>
-										<div class="col-auto">
-											<div class="stat text-primary">
-												<i class="align-middle" data-feather="check-circle"></i>
-											</div>
-										</div>
-									</div>
-									<h1 class="mt-1 mb-3">{{overall_resolved_tickets}}</h1>
 								</div>
 							</div>
 						</div>
 					</div>
 
 					<div class="row">
-						<div class="col-12 col-lg-8 col-xxl-9 d-flex">
-							<div class="card flex-fill">
+						<!-- Monthly Trend Chart -->
+						<div class="col-12 col-lg-8">
+							<div class="card">
 								<div class="card-header">
-
-									<h5 class="card-title mb-0">Recent Ticket Logs</h5>
+									<h5 class="card-title">Monthly Ticket Trend</h5>
 								</div>
-								<table class="table table-hover my-0">
-									<thead>
-										<tr>
-											<th>Ticket Number</th>
-											<th>Time Stamp</th>
-											<th class="d-none d-xl-table-cell">ID Number</th>
-											<th class="d-none d-xl-table-cell">Category</th>
-											<th>Status</th>
-											<th class="d-none d-md-table-cell">Agent</th>
-										</tr>
-									</thead>
-									<tbody>
-										{% for ticket in overall_recent_tickets %}
-										<tr>
-											<td>#{{ticket.ticket_number}}</td>
-											<td>{{ticket.created_at}}</td>
-											<td class="d-none d-xl-table-cell">{{ticket.id_number}}</td>
-											<td class="d-none d-xl-table-cell">{{ticket.category}}</td>
-											<td><span class="badge {% if ticket.status == 'Done' %}bg-success {% elif ticket.status == 'In Progress' %}bg-warning{% else %}bg-danger{% endif %}">{{ticket.status}}</span></td>
-											<td class="d-none d-md-table-cell">{{ticket.user.first_name|title}} {{ticket.user.last_name|title}}</td>
-										</tr>
-										{% endfor %}
-									</tbody>
-								</table>
+								<div class="card-body">
+									<div style="position: relative; height: 300px;">
+										<canvas id="ticketTrendChart"></canvas>
+									</div>
+								</div>
 							</div>
 						</div>
-						<div class="col-12 col-lg-4 col-xxl-3 d-flex">
-							<div class="card flex-fill w-100">
-								<div class="card-header">
 
-									<h5 class="card-title mb-0">Monthly Tickets Chart</h5>
+						<!-- Category Distribution Chart -->
+						<div class="col-12 col-lg-4">
+							<div class="card">
+								<div class="card-header">
+									<h5 class="card-title">Tickets by Category</h5>
 								</div>
-								<div class="card-body d-flex w-100">
-									<div class="align-self-center chart chart-lg">
-										<canvas id="chartjs-dashboard-bar"></canvas>
+								<div class="card-body">
+									<div style="position: relative; height: 300px;">
+										<canvas id="categoryPieChart"></canvas>
 									</div>
 								</div>
 							</div>
 						</div>
 					</div>
 
+					<!-- Recent Tickets Table -->
+					<div class="row">
+						<div class="col-12">
+							<div class="card">
+								<div class="card-header">
+									<h5 class="card-title">Recent Tickets</h5>
+								</div>
+								<div class="card-body">
+									<table class="table table-hover my-0">
+										<thead>
+											<tr>
+												<th>Ticket #</th>
+												<th>Created</th>
+												<th>ID Number</th>
+												<th>Category</th>
+												<th>Status</th>
+												<th>Agent</th>
+											</tr>
+										</thead>
+										<tbody>
+											{% for ticket in overall_recent_tickets %}
+											<tr>
+												<td>#{{ticket.ticket_number}}</td>
+												<td>{{ticket.created_at}}</td>
+												<td>{{ticket.id_number}}</td>
+												<td>{{ticket.category}}</td>
+												<td><span class="badge {% if ticket.status == 'Done' %}bg-success{% elif ticket.status == 'In Progress' %}bg-warning{% else %}bg-danger{% endif %}">{{ticket.status}}</span></td>
+												<td>{{ticket.user.first_name|title}} {{ticket.user.last_name|title}}</td>
+											</tr>
+											{% endfor %}
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
 					{% else %}
 					<div class="row">
 						<!-- Total Ticket -->
@@ -630,50 +681,109 @@
 	</script> -->
 	<script>
 		document.addEventListener("DOMContentLoaded", function() {
-			// Bar chart
-			new Chart(document.getElementById("chartjs-dashboard-bar"), {
-				type: "bar",
-				data: {
-					labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-					datasets: [{
-						label: "This year",
-						backgroundColor: window.theme.primary,
-						borderColor: window.theme.primary,
-						hoverBackgroundColor: window.theme.primary,
-						hoverBorderColor: window.theme.primary,
-						{% if request.user.is_superuser  %}
-						data: {{ overall_ticket_counts|safe }},
-						{% else %}
-						data: {{ ticket_counts|safe }}, <!-- Dynamically inject the ticket counts -->
-						{% endif %}
-						barPercentage: .75,
-						categoryPercentage: .5
-					}]
-				},
-				options: {
-					maintainAspectRatio: false,
-					legend: {
-						display: false
-					},
-					scales: {
-						yAxes: [{
-							gridLines: {
-								display: false
-							},
-							stacked: false,
-							ticks: {
-								stepSize: 20
+			console.log("Initializing charts...");
+
+			// Monthly Trend Chart
+			try {
+				const trendCtx = document.getElementById('ticketTrendChart');
+				if (trendCtx) {
+					new Chart(trendCtx, {
+						type: 'line',
+						data: {
+							labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+							datasets: [{
+								label: 'Total Tickets',
+								data: [{{ monthly_counts|join:"," }}],
+								borderColor: '#3b7ddd',
+								backgroundColor: 'rgba(59, 125, 221, 0.1)',
+								fill: true
+							}]
+						},
+						options: {
+							responsive: true,
+							maintainAspectRatio: false,
+							scales: {
+								y: {
+									beginAtZero: true
+								}
 							}
-						}],
-						xAxes: [{
-							stacked: false,
-							gridLines: {
-								color: "transparent"
-							}
-						}]
-					}
+						}
+					});
 				}
-			});
+			} catch (e) {
+				console.error("Error creating trend chart:", e);
+			}
+
+			// Category Distribution Chart
+			try {
+				const categoryCtx = document.getElementById('categoryPieChart');
+				if (categoryCtx) {
+					new Chart(categoryCtx, {
+						type: 'pie',
+						data: {
+							labels: {{ category_labels|safe }},
+							datasets: [{
+								data: [{{ category_counts|join:"," }}],
+								backgroundColor: [
+									'#3b7ddd',
+									'#28a745',
+									'#ffc107',
+									'#dc3545',
+									'#6f42c1',
+									'#fd7e14'
+								]
+							}]
+						},
+						options: {
+							responsive: true,
+							maintainAspectRatio: false
+						}
+					});
+				}
+			} catch (e) {
+				console.error("Error creating category chart:", e);
+			}
+
+			// Ticket Status Distribution Chart
+			try {
+				const statusCtx = document.getElementById('statusChart');
+				if (statusCtx) {
+					new Chart(statusCtx, {
+						type: 'doughnut',
+						data: {
+							labels: ['Done', 'In Progress', 'Assigned'],
+							datasets: [{
+								data: [
+									{{ done_count }},
+									{{ in_progress_count }},
+									{{ assigned_count }}
+								],
+								backgroundColor: [
+									'#28a745',  // green for Done
+									'#ffc107',  // yellow for In Progress
+									'#3b7ddd'   // blue for Assigned
+								],
+								borderWidth: 0
+							}]
+						},
+						options: {
+							responsive: true,
+							maintainAspectRatio: false,
+							plugins: {
+								legend: {
+									position: 'bottom',
+									labels: {
+										padding: 20
+									}
+								}
+							},
+							cutout: '65%'
+						}
+					});
+				}
+			} catch (e) {
+				console.error("Error creating status chart:", e);
+			}
 		});
 	</script>
 
@@ -781,6 +891,111 @@ function markNotificationRead(notificationId) {
 $(document).ready(function() {
     updateNotifications();
     setInterval(updateNotifications, 30000);
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Define colors
+    const colors = {
+        primary: '#3b7ddd',
+        success: '#28a745',
+        warning: '#ffc107',
+        danger: '#dc3545'
+    };
+
+    // Status Distribution Chart
+    const statusCtx = document.getElementById('statusChart');
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Done', 'In Progress', 'Assigned'],
+            datasets: [{
+                data: {{ status_counts|safe }},
+                backgroundColor: [colors.success, colors.warning, colors.primary],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20
+                    }
+                }
+            }
+        }
+    });
+
+    // Monthly Trend Chart
+    const trendCtx = document.getElementById('ticketTrendChart');
+    if (trendCtx) {
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Tickets',
+                    data: {{ monthly_counts|safe }},
+                    fill: true,
+                    backgroundColor: 'rgba(59, 125, 221, 0.1)',
+                    borderColor: colors.primary,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Category Distribution Chart
+    const categoryCtx = document.getElementById('categoryPieChart');
+    if (categoryCtx) {
+        new Chart(categoryCtx, {
+            type: 'pie',
+            data: {
+                labels: {{ category_labels|safe }},
+                datasets: [{
+                    data: {{ category_counts|safe }},
+                    backgroundColor: [
+                        colors.primary,
+                        colors.success,
+                        colors.warning,
+                        colors.danger
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
 });
 </script>
 
