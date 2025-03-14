@@ -30,7 +30,7 @@
 	<link href="{% static 'css/app.css' %}" rel="stylesheet">
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 
-	
+
 </head>
 
 <body>
@@ -57,7 +57,7 @@
         {% endif %}
         {{message.tags|capfirst}}
       </strong>
-      
+
     </div>
     <div class="toast-body">
       {{message|safe}}
@@ -93,7 +93,7 @@
 						<a class="sidebar-link" href="{% url 'faqs' %}">
               <i class="align-middle" data-feather="help-circle"></i> <span class="align-middle">FAQs</span>
             </a>
-					
+
 					</li>
 
 					<li class="sidebar-item">
@@ -132,75 +132,26 @@
 							<a class="nav-icon dropdown-toggle" href="#" id="alertsDropdown" data-bs-toggle="dropdown">
 								<div class="position-relative">
 									<i class="align-middle" data-feather="bell"></i>
-									<span class="indicator">4</span>
+									<span class="indicator" id="notification-count">0</span>
 								</div>
 							</a>
 							<div class="dropdown-menu dropdown-menu-lg dropdown-menu-end py-0" aria-labelledby="alertsDropdown">
 								<div class="dropdown-menu-header">
-									4 New Notifications
+									<span id="notification-header">Notifications</span>
 								</div>
-								<div class="list-group">
-									<a href="#" class="list-group-item">
-										<div class="row g-0 align-items-center">
-											<div class="col-2">
-												<i class="text-danger" data-feather="alert-circle"></i>
-											</div>
-											<div class="col-10">
-												<div class="text-dark">Update completed</div>
-												<div class="text-muted small mt-1">Restart server 12 to complete the update.</div>
-												<div class="text-muted small mt-1">30m ago</div>
-											</div>
-										</div>
-									</a>
-									<a href="#" class="list-group-item">
-										<div class="row g-0 align-items-center">
-											<div class="col-2">
-												<i class="text-warning" data-feather="bell"></i>
-											</div>
-											<div class="col-10">
-												<div class="text-dark">Lorem ipsum</div>
-												<div class="text-muted small mt-1">Aliquam ex eros, imperdiet vulputate hendrerit et.</div>
-												<div class="text-muted small mt-1">2h ago</div>
-											</div>
-										</div>
-									</a>
-									<a href="#" class="list-group-item">
-										<div class="row g-0 align-items-center">
-											<div class="col-2">
-												<i class="text-primary" data-feather="home"></i>
-											</div>
-											<div class="col-10">
-												<div class="text-dark">Login from 192.186.1.8</div>
-												<div class="text-muted small mt-1">5h ago</div>
-											</div>
-										</div>
-									</a>
-									<a href="#" class="list-group-item">
-										<div class="row g-0 align-items-center">
-											<div class="col-2">
-												<i class="text-success" data-feather="user-plus"></i>
-											</div>
-											<div class="col-10">
-												<div class="text-dark">New connection</div>
-												<div class="text-muted small mt-1">Christina accepted your request.</div>
-												<div class="text-muted small mt-1">14h ago</div>
-											</div>
-										</div>
-									</a>
-								</div>
-								<div class="dropdown-menu-footer">
-									<a href="#" class="text-muted">Show all notifications</a>
+								<div class="list-group" id="notifications-list">
+									<!-- Notifications will be loaded here -->
 								</div>
 							</div>
 						</li>
-						
+
 						<li class="nav-item dropdown">
 							<a class="nav-icon dropdown-toggle d-inline-block d-sm-none" href="#" data-bs-toggle="dropdown">
                 <i class="align-middle" data-feather="settings"></i>
               </a>
 
 							<a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
-                <img src="{% static 'img/avatars/cash.png' %}" class="avatar img-fluid rounded me-1" alt="" /> <span class="text-dark">{{user.first_name|title}} {{user.last_name|title}}</span>
+                <span class="text-dark">{{user.first_name|title}} {{user.last_name|title}}</span>
               </a>
 							<div class="dropdown-menu dropdown-menu-end">
 								<a class="dropdown-item" href="pages-profile.html"><i class="align-middle me-1" data-feather="user"></i> Profile</a>
@@ -226,7 +177,7 @@
 							+ Create Ticket
 						</button>
 					</div>
-			
+
 					<!-- Modal for Create Ticket -->
 					<div class="modal fade" id="createTicketModal" tabindex="-1" aria-labelledby="createTicketModalLabel" aria-hidden="true">
 						<div class="modal-dialog modal-dialog-centered modal-lg">
@@ -235,7 +186,7 @@
 									<h5 class="modal-title" id="createTicketModalLabel">Ticket Management</h5>
 									<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 								</div>
-					
+
 								<!-- Modal Body with Tabs -->
 								<div class="modal-body">
 									<!-- Tabs Navigation -->
@@ -247,7 +198,7 @@
 											<a class="nav-link" id="create-ticket-tab" data-bs-toggle="tab" href="#create-ticket" role="tab" aria-controls="create-ticket" aria-selected="false">Create Ticket</a>
 										</li>
 									</ul>
-					
+
 									<!-- Tabs Content -->
 									<div class="tab-content" id="ticketTabsContent">
 										<!-- History Tab -->
@@ -261,13 +212,13 @@
 												</div>
 												<button type="submit" class="btn btn-primary">Search</button>
 											</form>
-					
+
 											<!-- Display Ticket History -->
 											<div id="ticketHistoryContent" class="mt-3">
 												<p>No tickets found. Search for ticket history using ID Number.</p>
 											</div>
 										</div>
-					
+
 										<!-- Create Ticket Tab -->
 										<div class="tab-pane fade" id="create-ticket" role="tabpanel" aria-labelledby="create-ticket-tab">
 											<form method="post" action="{% url 'create_ticket' %}" class="form-horizontal">
@@ -287,7 +238,7 @@
 													</div>
 													{% endfor %}
 												</div>
-					
+
 												<div class="modal-footer">
 													<button type="submit" class="btn btn-primary">Submit</button>
 												</div>
@@ -321,7 +272,7 @@
 								</div>
 							</div>
 						</div>
-			
+
 						<!-- Tickets Today -->
 						<div class="col-lg-3 col-md-6 col-sm-12">
 							<div class="card">
@@ -340,7 +291,7 @@
 								</div>
 							</div>
 						</div>
-			
+
 						<!-- Total Assigned -->
 						<div class="col-lg-3 col-md-6 col-sm-12">
 							<div class="card">
@@ -359,7 +310,7 @@
 								</div>
 							</div>
 						</div>
-			
+
 						<!-- Total Resolved -->
 						<div class="col-lg-3 col-md-6 col-sm-12">
 							<div class="card">
@@ -398,7 +349,7 @@
 											<th class="d-none d-md-table-cell">Agent</th>
 										</tr>
 									</thead>
-									<tbody> 
+									<tbody>
 										{% for ticket in overall_recent_tickets %}
 										<tr>
 											<td>#{{ticket.ticket_number}}</td>
@@ -448,7 +399,7 @@
 								</div>
 							</div>
 						</div>
-			
+
 						<!-- Tickets Today -->
 						<div class="col-lg-3 col-md-6 col-sm-12">
 							<div class="card">
@@ -467,7 +418,7 @@
 								</div>
 							</div>
 						</div>
-			
+
 						<!-- Total Assigned -->
 						<div class="col-lg-3 col-md-6 col-sm-12">
 							<div class="card">
@@ -486,7 +437,7 @@
 								</div>
 							</div>
 						</div>
-			
+
 						<!-- Total Resolved -->
 						<div class="col-lg-3 col-md-6 col-sm-12">
 							<div class="card">
@@ -506,7 +457,7 @@
 							</div>
 						</div>
 					</div>
-					
+
 
 
 					<div class="row">
@@ -527,7 +478,7 @@
 											<!-- <th class="d-none d-md-table-cell">Agent</th> -->
 										</tr>
 									</thead>
-									<tbody> 
+									<tbody>
 										{% for ticket in recent_tickets %}
 										<tr>
 											<td>#{{ticket.ticket_number}}</td>
@@ -570,7 +521,7 @@
 								<a class="text-muted" href="https://helpdesk.knust.edu.gh/" target="_blank"><strong>USSD</strong></a> - <a class="text-muted" href="https://helpdesk.knust.edu.gh/" target="_blank"><strong>Ticketing System</strong></a>								&copy;
 							</p>
 						</div>
-						
+
 					</div>
 				</div>
 			</footer>
@@ -725,7 +676,7 @@
 			});
 		});
 	</script>
-	
+
 
 	<script>
 		document.addEventListener("DOMContentLoaded", function() {
@@ -780,15 +731,15 @@
 
 <script type="text/javascript">
     $(function () {
-        
-        
+
+
         $("#createTicketModal").modalForm({
             formURL: "{% url 'create_ticket' %}",
             modalID: "#createTicketModal"
         });
 
-       
-  
+
+
     });
   </script>
 
@@ -797,7 +748,42 @@
 	  $('.toast').toast('show');  // Show all toasts on page load
 	});
   </script>
-  
+
+<script>
+function updateNotifications() {
+    $.ajax({
+        url: '{% url "get_notifications" %}',
+        type: 'GET',
+        success: function(response) {
+            $('#notifications-list').html(response.html);
+            $('#notification-count').text(response.count);
+            $('#notification-header').text(response.count + ' New Notifications');
+        }
+    });
+}
+
+function markNotificationRead(notificationId) {
+    $.ajax({
+        url: '{% url "mark_notification_read" notification_id=0 %}'.replace('0', notificationId),
+        type: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        success: function(response) {
+            if (response.success) {
+                updateNotifications();
+            }
+        }
+    });
+}
+
+// Update notifications every 30 seconds
+$(document).ready(function() {
+    updateNotifications();
+    setInterval(updateNotifications, 30000);
+});
+</script>
+
 </body>
 
 </html>

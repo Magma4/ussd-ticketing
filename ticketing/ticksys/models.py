@@ -13,13 +13,13 @@ class Ticket(models.Model):
         ('In Progress', 'In Progress'),
         ('Done', 'Done'),
     ]
-    
+
     CLIENT_TYPE = [
         ('Staff', 'Staff'),
         ('Student', 'Student'),
         ('Other', 'Other')
     ]
-    
+
     MODE_CHOICES = [
         ('Walk-In', 'Walk-In'),
         ('Phone', 'Phone'),
@@ -60,3 +60,14 @@ class Agent(models.Model):
 
     def __str__(self):
         return self.username.username
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE)
+    message = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']

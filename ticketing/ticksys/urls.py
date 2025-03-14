@@ -13,4 +13,6 @@ urlpatterns = [
     path('ticket/<int:pk>/delete/', views.delete_ticket, name='delete_ticket'),
     path('searchdata', views.searchdata, name='searchdata'),
     path('ticket_excel', views.ticket_excel, name='ticket_excel'),
+    path('notifications/', views.get_notifications, name='get_notifications'),
+    path('notifications/<int:notification_id>/read/', views.mark_notification_read, name='mark_notification_read'),
 ]

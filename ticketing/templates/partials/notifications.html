@@ -1,0 +1,21 @@
+{% for notification in notifications %}
+<a href="#" class="list-group-item" onclick="markNotificationRead({{ notification.id }})">
+    <div class="row g-0 align-items-center">
+        <div class="col-2">
+            {% if 'assigned' in notification.message %}
+                <i class="text-info" data-feather="user-plus"></i>
+            {% elif 'status' in notification.message %}
+                <i class="text-warning" data-feather="refresh-cw"></i>
+            {% endif %}
+        </div>
+        <div class="col-10">
+            <div class="text-dark">{{ notification.message }}</div>
+            <div class="text-muted small mt-1">{{ notification.created_at|timesince }} ago</div>
+        </div>
+    </div>
+</a>
+{% empty %}
+<div class="list-group-item">
+    <div class="text-center">No new notifications</div>
+</div>
+{% endfor %}

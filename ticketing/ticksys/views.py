@@ -222,7 +222,7 @@ def ticketlogs(request):
         day=ExtractDay('created_at'),
         year=ExtractYear('created_at')
     ).filter(
-        Q(user=user) | Q(assigned_to=user.username)
+        Q(user=user) | Q(assigned_to=user.username) | Q(created_by=user.username)
     ).order_by('-id')
 
     paginator = Paginator(tickets, 15)
@@ -287,35 +287,46 @@ def create_ticket(request):
 
 def update_ticket_status(request, pk):
     if request.method == 'POST':
-        # Fetch the ticket
         ticket = get_object_or_404(Ticket, id=pk)
 
-        # Get new values from the form
         new_status = request.POST.get('status')
         assigned_user_username = request.POST.get('assigned_user')
 
-        # Track changes
         status_changed = new_status and new_status != ticket.status
         user_changed = (assigned_user_username != ticket.assigned_to) if assigned_user_username else ticket.assigned_to is not None
 
-        # Handle user assignment (clear or update)
         if user_changed:
-            if assigned_user_username:  # If a user is selected
+            if assigned_user_username:
                 assigned_user = get_object_or_404(User, username=assigned_user_username)
                 ticket.assigned_to = assigned_user_username
-                ticket.status = 'Assigned'  # Optionally set status to 'Assigned'
+                ticket.status = 'Assigned'
+
+                # Create notification for assigned user
+                Notification.objects.create(
+                    user=assigned_user,
+                    ticket=ticket,
+                    message=f'Ticket #{ticket.ticket_number} has been assigned to you'
+                )
+
                 messages.success(request, f'Ticket #{ticket.ticket_number} has been assigned to {assigned_user_username}')
-            else:  # If "None" is selected, clear the assigned user
+            else:
                 ticket.assigned_to = None
                 messages.success(request, f'Ticket #{ticket.ticket_number} has been unassigned')
 
-        # Handle status update
         if status_changed:
             previous_status = ticket.status
             ticket.status = new_status
+
+            # Create notification for ticket creator
+            if new_status in ['Done', 'In Progress']:
+                Notification.objects.create(
+                    user=ticket.user,
+                    ticket=ticket,
+                    message=f'Your ticket #{ticket.ticket_number} status has been changed to {new_status}'
+                )
+
             messages.success(request, f'Ticket #{ticket.ticket_number} status changed from {previous_status} to {new_status}')
 
-        # Save changes
         ticket.save()
         return redirect('ticketlogs')
 
@@ -330,31 +341,59 @@ def searchdata(request):
     q = request.GET.get('query')
 
     if q:
-        try:
-            tickets_by_user = Ticket.objects.filter(user=user)
-            tickets = tickets_by_user.filter(
+        if request.user.is_superuser:
+            # Superusers can search all tickets
+            tickets = Ticket.objects.filter(
                 Q(ticket_number__icontains=q) |
-                Q(id_number__icontains=q)
-            )
-        except ValueError:
-            tickets_by_user = Ticket.objects.filter(user=user)
-            tickets = tickets_by_user.filter(
+                Q(id_number__icontains=q) |
+                Q(assigned_to__icontains=q) |
+                Q(user__username__icontains=q) |  # Search by creator's username
+                Q(status__icontains=q) |
+                Q(category__icontains=q) |
+                Q(client_type__icontains=q) |
+                Q(mode__icontains=q)
+            ).order_by('-id')
+        else:
+            # Regular users can only search their own tickets and tickets assigned to them
+            tickets = Ticket.objects.filter(
+                Q(user=user) | Q(assigned_to=user.username)
+            ).filter(
                 Q(ticket_number__icontains=q) |
-                Q(id_number__icontains=q)
-            )
+                Q(id_number__icontains=q) |
+                Q(assigned_to__icontains=q) |
+                Q(status__icontains=q) |
+                Q(category__icontains=q) |
+                Q(client_type__icontains=q) |
+                Q(mode__icontains=q)
+            ).order_by('-id')
     else:
-        tickets = tickets_by_user.all()
-        messages.error(request, "No results found")
+        # If no search query, show all tickets for superuser or user's tickets for regular users
+        if request.user.is_superuser:
+            tickets = Ticket.objects.all().order_by('-id')
+        else:
+            tickets = Ticket.objects.filter(
+                Q(user=user) | Q(assigned_to=user.username)
+            ).order_by('-id')
 
-    paginator = Paginator(tickets, 10)
+    # Paginate the results
+    paginator = Paginator(tickets, 15)  # Show 15 tickets per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    # For superusers, we'll use page_obj2 to maintain consistency with the template
+    if request.user.is_superuser:
+        page_obj2 = page_obj
+        page_obj = None
+    else:
+        page_obj2 = None
+
     context = {
         'page_obj': page_obj,
+        'page_obj2': page_obj2,
         'query': q,
+        'all_users': User.objects.all(),  # Add this for the assign dropdown
     }
-    return render(request, 'ticketlogs.html', context=context)
+    return render(request, 'ticketlogs.html', context)
 
 def is_valid_queryparam(param):
     return param != '' and param is not None
@@ -512,21 +551,21 @@ def ticket_excel(request):
     assigned_to = request.session.get('assigned_to')
 
     # Apply filters to the queryset
-    tl = tl.filter(
-        Q(date__range=[date_from, date_to]) if date_from and date_to else Q()
-    )
+    if date_from and date_to:
+        tl = tl.filter(created_at__range=[date_from, date_to])
+
     if is_valid_queryparam(ticket_number):
         tl = tl.filter(ticket_number__icontains=ticket_number)
     if is_valid_queryparam(created_by):
-        tl = tl.filter(user__contains=created_by)
+        tl = tl.filter(user__username=created_by)
     if is_valid_queryparam(id_number):
-        ol = ol.filter(id_number__icontains=id_number)
+        tl = tl.filter(id_number__icontains=id_number)
     if is_valid_queryparam(status):
-        ol = ol.filter(status=status)
+        tl = tl.filter(status=status)
     if is_valid_queryparam(mode):
-        ol = ol.filter(mode=mode)
+        tl = tl.filter(mode=mode)
     if is_valid_queryparam(assigned_to):
-        ol = ol.filter(assigned_to__icontains=assigned_to)
+        tl = tl.filter(assigned_to=assigned_to)
 
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = f'attachment; filename="Ticket Report {date_from} to {date_to}.xlsx"'
@@ -557,11 +596,17 @@ def ticket_excel(request):
 
     for ticket in tl:
         row_num += 1
-        row = [ticket.ticket_number , ticket.user, ticket.assigned_to, ticket.id_number, ticket.client_type,
-               ticket.category, ticket.status,
-               ticket.created_at.replace(tzinfo=None) if ticket.created_at else None,
-               ticket.updated_at.replace(tzinfo=None) if ticket.updated_at else None,
-               ]
+        row = [
+            ticket.ticket_number,
+            str(ticket.user.username),  # Convert User object to username string
+            ticket.assigned_to,
+            ticket.id_number,
+            ticket.client_type,
+            ticket.category,
+            ticket.status,
+            ticket.created_at.replace(tzinfo=None) if ticket.created_at else None,
+            ticket.updated_at.replace(tzinfo=None) if ticket.updated_at else None,
+        ]
 
         for col_num, cell_value in enumerate(row, 1):
             cell = worksheet.cell(row=row_num, column=col_num)
@@ -579,7 +624,7 @@ def ticket_excel(request):
     total_count_cell.alignment = Alignment(horizontal="center", vertical="center")
 
     total_count_value_cell = worksheet.cell(row=row_num + 1, column=2)
-    total_count_value_cell.value = len(ol)
+    total_count_value_cell.value = len(tl)
     total_count_value_cell.font = Font(bold=True)
     total_count_value_cell.alignment = Alignment(horizontal="center", vertical="center")
 
@@ -716,3 +761,30 @@ def delete_ticket(request, pk):
         messages.success(request, f'Ticket #{ticket_number} has been deleted successfully')
 
     return redirect('ticketlogs')
+
+def get_notifications(request):
+    if request.user.is_authenticated:
+        notifications = Notification.objects.filter(
+            user=request.user,
+            is_read=False
+        ).order_by('-created_at')[:5]  # Get 5 most recent unread notifications
+
+        context = {
+            'notifications': notifications,
+            'unread_count': notifications.count()
+        }
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            html = render_to_string('partials/notifications.html', context, request=request)
+            return JsonResponse({'html': html, 'count': notifications.count()})
+
+        return render(request, 'partials/notifications.html', context)
+    return JsonResponse({'html': '', 'count': 0})
+
+def mark_notification_read(request, notification_id):
+    if request.method == 'POST' and request.user.is_authenticated:
+        notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+        notification.is_read = True
+        notification.save()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False})
