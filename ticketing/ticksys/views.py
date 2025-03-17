@@ -30,6 +30,7 @@ from openpyxl.styles import PatternFill, Font, Alignment
 from reportlab.lib import colors
 import json
 from django.core.serializers.json import DjangoJSONEncoder
+from django.views.decorators.http import require_POST
 
 
 # Create your views here.
@@ -187,7 +188,7 @@ def index(request):
         overall_ticket_counts[month_index] = order['count']
 
     overall_total_tickets = Ticket.objects.all().count()
-    overall_resolved_tickets = Ticket.objects.all().count()
+    overall_resolved_tickets = Ticket.objects.filter(status='Done').count()
     overall_assigned_tickets = Ticket.objects.filter(status='Assigned').count()
 
     today = timezone.now().date()
@@ -282,6 +283,12 @@ def ticketlogs(request):
 
     return render(request, 'ticketlogs.html', context)
 
+@login_required
+@require_POST
+def mark_all_notifications_read(request):
+    # Mark all unread notifications for the current user as read
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    return JsonResponse({'success': True})
 
 def faqs(request):
     return render(request, 'faqs.html')

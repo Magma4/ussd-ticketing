@@ -821,24 +821,6 @@
     });
 </script>
 
-<!-- <script>
-    $('#ticketForm').on('submit', function(event) {
-        event.preventDefault();
-        $.ajax({
-            url: '{% url "create_ticket" %}',
-            method: 'POST',
-            data: $(this).serialize(),
-            success: function(response) {
-                $('#createTicketModal').modal('hide');
-                location.reload();
-            },
-            error: function() {
-                alert('Error creating ticket.');
-            }
-        });
-    });
-</script> -->
-
 <script type="text/javascript">
     $(function () {
 
@@ -895,109 +877,7 @@ $(document).ready(function() {
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    // Define colors
-    const colors = {
-        primary: '#3b7ddd',
-        success: '#28a745',
-        warning: '#ffc107',
-        danger: '#dc3545'
-    };
 
-    // Status Distribution Chart
-    const statusCtx = document.getElementById('statusChart');
-    new Chart(statusCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Done', 'In Progress', 'Assigned'],
-            datasets: [{
-                data: {{ status_counts|safe }},
-                backgroundColor: [colors.success, colors.warning, colors.primary],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        padding: 20
-                    }
-                }
-            }
-        }
-    });
-
-    // Monthly Trend Chart
-    const trendCtx = document.getElementById('ticketTrendChart');
-    if (trendCtx) {
-        new Chart(trendCtx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                datasets: [{
-                    label: 'Tickets',
-                    data: {{ monthly_counts|safe }},
-                    fill: true,
-                    backgroundColor: 'rgba(59, 125, 221, 0.1)',
-                    borderColor: colors.primary,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    // Category Distribution Chart
-    const categoryCtx = document.getElementById('categoryPieChart');
-    if (categoryCtx) {
-        new Chart(categoryCtx, {
-            type: 'pie',
-            data: {
-                labels: {{ category_labels|safe }},
-                datasets: [{
-                    data: {{ category_counts|safe }},
-                    backgroundColor: [
-                        colors.primary,
-                        colors.success,
-                        colors.warning,
-                        colors.danger
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
-    }
-});
-</script>
 
 </body>
 

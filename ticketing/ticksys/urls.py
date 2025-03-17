@@ -15,4 +15,5 @@ urlpatterns = [
     path('ticket_excel', views.ticket_excel, name='ticket_excel'),
     path('notifications/', views.get_notifications, name='get_notifications'),
     path('notifications/<int:notification_id>/read/', views.mark_notification_read, name='mark_notification_read'),
+    path('mark-all-notifications-read/', views.mark_all_notifications_read, name='mark_all_notifications_read'),
 ]
