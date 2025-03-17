@@ -212,7 +212,7 @@ def index(request):
 
 
 
-    # Category data
+    # Category data info
     category_data = tickets.values('category').annotate(count=Count('id'))
     category_labels = [f"'{item['category']}'" for item in category_data]
     category_counts = [item['count'] for item in category_data]
