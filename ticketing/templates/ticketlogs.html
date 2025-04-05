@@ -143,6 +143,10 @@
                                                                                     <option value="Transcript" {% if ticket.category == "Transcript" %}selected{% endif %}>Transcript</option>
                                                                                     <option value="Admission" {% if ticket.category == "Admission" %}selected{% endif %}>Admission</option>
                                                                                     <option value="Wi-Fi" {% if ticket.category == "Wi-Fi" %}selected{% endif %}>Wi-Fi</option>
+                                                                                    <option value="AIM App" {% if ticket.category == "AIM App" %}selected{% endif %}>AIM App</option>
+                                                                                    <option value="Telecel" {% if ticket.category == "Telecel" %}selected{% endif %}>Telecel</option>
+                                                                                    <option value="Biometric" {% if ticket.category == "Biometric" %}selected{% endif %}>Biometric</option>
+
                                                                                     <option value="Other" {% if ticket.category == "Other" %}selected{% endif %}>Other</option>
                                                                                 </select>
                                                                             </div>
@@ -201,10 +205,10 @@
                                                 <td>
                                                     <!-- Action Buttons -->
                                                     <div class="btn-group" role="group">
-                                                        <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#infoModal{{ ticket.id }}">
+                                                        <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#infoModal{{ ticket.id }}" style="margin-right: 5px;">
                                                     More
                                                 </button>
-                                                        <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editModal{{ ticket.id }}">
+                                                        <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editModal{{ ticket.id }}" style="margin-right: 5px;">
                                                             Edit
                                                         </button>
                                                         <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ ticket.id }}">
@@ -285,6 +289,9 @@
                                                                                 <option value="Transcript" {% if ticket.category == "Transcript" %}selected{% endif %}>Transcript</option>
                                                                                 <option value="Admission" {% if ticket.category == "Admission" %}selected{% endif %}>Admission</option>
                                                                                 <option value="Wi-Fi" {% if ticket.category == "Wi-Fi" %}selected{% endif %}>Wi-Fi</option>
+                                                                                <option value="AIM App" {% if ticket.category == "AIM App" %}selected{% endif %}>AIM App</option>
+                                                                                <option value="Telecel" {% if ticket.category == "Telecel" %}selected{% endif %}>Telecel</option>
+                                                                                <option value="Biometric" {% if ticket.category == "Biometric" %}selected{% endif %}>Biometric</option>
                                                                                 <option value="Other" {% if ticket.category == "Other" %}selected{% endif %}>Other</option>
                                                                             </select>
                                                                         </div>
