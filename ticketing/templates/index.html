@@ -738,7 +738,17 @@
 						},
 						options: {
 							responsive: true,
-							maintainAspectRatio: false
+							maintainAspectRatio: false,
+							plugins: {
+								legend: {
+									position: 'right',
+									align: 'center', // optional: 'start', 'center', or 'end'
+									labels: {
+										boxWidth: 20,
+										padding: 15
+									}
+								}
+							}
 						}
 					});
 				}

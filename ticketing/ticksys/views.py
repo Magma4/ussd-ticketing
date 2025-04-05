@@ -576,7 +576,7 @@ def report(request):
     }
     return render(request, 'report.html', context)
 
-@login_required
+
 def ticket_excel(request):
     tl = Ticket.objects.order_by('user')
 
