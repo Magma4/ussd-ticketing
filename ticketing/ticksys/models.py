@@ -34,6 +34,9 @@ class Ticket(models.Model):
         ('Transcript', 'Transcript'),
         ('Admission', 'Admission'),
         ('Wi-Fi', 'Wi-Fi'),
+        ('AIM App', 'AIM App'),
+        ('Telecel', 'Telecel'),
+        ('Biometric', 'Biometric'),
         ('Other', 'Other')
     ]
 
